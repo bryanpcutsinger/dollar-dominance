@@ -61,6 +61,29 @@ class TestFxTurnover:
         assert 88.3 + 32.3 + 16.8 + 12.8 + 4.3 > 100
 
 
+class TestTreasuryProcessing:
+    """Test foreign Treasury holdings ratio computation."""
+
+    def test_unit_conversion(self):
+        """Verify billions/millions conversion produces correct ratio."""
+        # Example: 9248.4 billion foreign / 38514009 million total
+        foreign_billions = 9248.4
+        total_millions = 38514009
+        ratio = (foreign_billions * 1000 / total_millions) * 100
+        # Should be approximately 24.0%
+        assert 23.0 < ratio < 25.0, f"Expected ~24%, got {ratio:.1f}%"
+
+    def test_sanity_bounds(self):
+        """Output values should fall within 5-70% range historically."""
+        path = Path('data/processed/treasury_foreign_share.csv')
+        if not path.exists():
+            pytest.skip("treasury_foreign_share.csv not found — run pipeline first")
+
+        df = pd.read_csv(path)
+        assert df['foreign_share'].min() >= 1, "Foreign share below 1%"
+        assert df['foreign_share'].max() <= 70, "Foreign share above 70%"
+
+
 class TestDebtSecurities:
     """Test BIS debt securities share computation."""
 

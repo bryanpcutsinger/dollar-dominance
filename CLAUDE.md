@@ -29,7 +29,7 @@ open output/index.html
 
 | Source | Method | Frequency |
 |--------|--------|-----------|
-| FRED (DXY only) | `fredapi` | Daily → weekly |
+| FRED (DXY, FDHBFIN, GFDEBTN) | `fredapi` | Daily → weekly (DXY), Quarterly (Treasuries) |
 | IMF COFER | SDMX API (DBnomics fallback) | Quarterly |
 | BIS Debt Securities | Bulk CSV download | Quarterly |
 | BIS FX Turnover | Hard-coded | Every 3 years |
@@ -38,7 +38,7 @@ open output/index.html
 
 Three tabs:
 - **Snapshot** — Metric cards + key takeaways
-- **Trends** — Interactive Plotly charts (COFER, FX Turnover, Debt Securities, DXY) with per-chart takeaway panels
+- **Trends** — Interactive Plotly charts (COFER, FX Turnover, Debt Securities, Foreign Treasury Holdings, DXY) with per-chart takeaway panels
 - **Methodology** — Data source descriptions and caveats
 
 ## Tech Stack

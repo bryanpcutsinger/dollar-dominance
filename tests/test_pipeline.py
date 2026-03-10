@@ -16,7 +16,7 @@ class TestNoFetchMode:
         """After processing, expected output files should exist."""
         proc_dir = Path('data/processed')
         # These should exist after any successful run
-        expected = ['cofer_shares.csv', 'fx_turnover_triennial.csv', 'metadata.json']
+        expected = ['cofer_shares.csv', 'fx_turnover_triennial.csv', 'treasury_foreign_share.csv', 'metadata.json']
         for f in expected:
             path = proc_dir / f
             assert path.exists(), f"Expected {path} to exist"

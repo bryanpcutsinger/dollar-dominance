@@ -28,6 +28,8 @@ if FRED_API_KEY == 'YOUR_KEY_HERE':
 # FRED series to fetch
 FRED_SERIES = {
     'DTWEXBGS': 'Nominal Broad U.S. Dollar Index',
+    'FDHBFIN': 'Federal Debt Held by Foreign and International Investors',
+    'GFDEBTN': 'Federal Debt: Total Public Debt',
 }
 
 # IMF COFER — primary source is IMF SDMX API, DBnomics as fallback

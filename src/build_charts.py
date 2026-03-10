@@ -208,6 +208,48 @@ def build_chart_debt_securities():
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
 
 
+def build_chart_treasuries(event_markers=True):
+    """Chart: Foreign holdings of US Treasuries as share of total debt."""
+    path = PROC_DIR / 'treasury_foreign_share.csv'
+    if not path.exists():
+        return _placeholder("Foreign Treasury holdings data unavailable.")
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df['foreign_share'],
+        name='Foreign Share of US Treasuries',
+        line=dict(color=COLORS['USD'], width=1.5),
+    ))
+
+    if event_markers:
+        _add_event_markers(fig)
+
+    # Latest value annotation
+    latest_val = df['foreign_share'].dropna().iloc[-1]
+    latest_date = df['foreign_share'].dropna().index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    fig.add_annotation(
+        x=latest_date, y=latest_val,
+        text=f"<b>{latest_val:.1f}%</b><br>({quarter})",
+        showarrow=True, arrowhead=2, ax=-60, ay=-30,
+        font=dict(size=12, color=COLORS['USD']),
+        bgcolor="white", bordercolor=COLORS['USD'], borderwidth=1,
+    )
+
+    fig.update_layout(
+        **LAYOUT_DEFAULTS,
+        title="Foreign Holdings of U.S. Treasury Debt (FRED)",
+        yaxis=dict(title="Share of Total Debt (%)", range=[0, 50]),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center"),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
+
+
 def build_chart_dxy(event_markers=True):
     """Standalone DXY line chart for the Trends tab."""
     path = PROC_DIR / 'dxy_weekly.csv'

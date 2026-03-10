@@ -56,6 +56,19 @@ class TestStickyHeader:
         assert 'sticky-value' in result
 
 
+class TestTreasuriesTakeaways:
+    """Test treasuries takeaway generation."""
+
+    def test_treasuries_takeaways_returns_html(self):
+        """build_treasuries_takeaways should return HTML with FRED reference."""
+        from src.build_components import build_treasuries_takeaways
+        result = build_treasuries_takeaways()
+        if not result:
+            pytest.skip("No treasury data available")
+        assert 'FRED' in result
+        assert 'key-takeaways' in result
+
+
 class TestQualitativeData:
     """Test qualitative/editorial content rendering."""
 
@@ -66,6 +79,7 @@ class TestQualitativeData:
         assert 'COFER' in result
         assert 'BIS' in result
         assert 'DTWEXBGS' in result
+        assert 'FDHBFIN' in result
 
 
 class TestDeltaFormatting:

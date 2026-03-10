@@ -27,6 +27,14 @@ debt securities outstanding. Quarterly. Includes all issuers and all maturities.
 Note: Only USD, EUR, and Other breakdown is available from the BIS bulk dataset
 at the aggregate level.</p>
 
+<p><strong>Foreign Holdings of Treasuries (FRED):</strong> Quarterly data from the
+U.S. Treasury via FRED. Foreign holdings (FDHBFIN, billions) divided by total public
+debt (GFDEBTN, millions) gives the share of U.S. federal debt held by foreign and
+international investors. Unlike the BIS debt securities measure (which tracks currency
+denomination of international bonds), this captures foreign demand for U.S. sovereign
+debt specifically &mdash; a proxy for confidence in dollar-denominated safe assets.
+FDHBFIN typically lags one quarter behind GFDEBTN. Available since 1970.</p>
+
 <p><strong>Dollar Index (DTWEXBGS):</strong> Nominal Broad U.S. Dollar Index from
 the Federal Reserve, trade-weighted against a broad set of currencies.</p>
 """

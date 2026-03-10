@@ -109,7 +109,33 @@ def build_metric_cards():
             <div class="card-date">{quarter} &middot; BIS</div>
         </div>""")
 
-    # Card 4: Dollar Index (DXY)
+    # Card 4: Foreign Treasury Holdings (FRED)
+    treas_path = PROC_DIR / 'treasury_foreign_share.csv'
+    if treas_path.exists():
+        df = pd.read_csv(treas_path, parse_dates=['date'], index_col='date')
+        share = df['foreign_share'].dropna()
+        latest_val = share.iloc[-1]
+        latest_date = share.index[-1]
+        latest_period = latest_date.to_period('Q')
+        # YoY: match by quarter period (4 quarters back)
+        target_period = latest_period - 4
+        yoy_matches = share[share.index.to_period('Q') == target_period]
+        if len(yoy_matches) > 0:
+            delta = latest_val - yoy_matches.iloc[0]
+            delta_str = _delta_html(delta)
+        else:
+            delta_str = ""
+        quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+        cards.append(f"""
+        <div class="metric-card">
+            <div class="category-badge badge-demand">DEMAND</div>
+            <div class="card-label">Foreign Treasury Holdings</div>
+            <div class="card-value">{latest_val:.1f}%</div>
+            <div class="card-delta">{delta_str}</div>
+            <div class="card-date">{quarter} &middot; FRED</div>
+        </div>""")
+
+    # Card 5: Dollar Index (DXY)
     dxy_path = PROC_DIR / 'dxy_weekly.csv'
     if dxy_path.exists():
         df = pd.read_csv(dxy_path, parse_dates=['date'], index_col='date')
@@ -191,7 +217,28 @@ def build_key_takeaways():
                 f"{direction} {abs(delta):.1f} pp from a year ago."
             )
 
-    # 4. DXY
+    # 4. Foreign Treasury Holdings
+    treas_path = PROC_DIR / 'treasury_foreign_share.csv'
+    if treas_path.exists():
+        df = pd.read_csv(treas_path, parse_dates=['date'], index_col='date')
+        share = df['foreign_share'].dropna()
+        if len(share) > 0:
+            latest = share.iloc[-1]
+            latest_date = share.index[-1]
+            latest_period = latest_date.to_period('Q')
+            quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+            # YoY: match by quarter period
+            target_period = latest_period - 4
+            yoy_matches = share[share.index.to_period('Q') == target_period]
+            if len(yoy_matches) > 0:
+                delta = latest - yoy_matches.iloc[0]
+                direction = "down" if delta < 0 else "up"
+                takeaways.append(
+                    f"Foreign investors held {latest:.1f}% of total U.S. public debt as of {quarter}, "
+                    f"{direction} {abs(delta):.1f} pp from a year ago."
+                )
+
+    # 5. DXY
     dxy_path = PROC_DIR / 'dxy_weekly.csv'
     if dxy_path.exists():
         df = pd.read_csv(dxy_path, parse_dates=['date'], index_col='date')
@@ -235,6 +282,12 @@ def build_sticky_header():
         df = pd.read_csv(fx_path).dropna(subset=['usd'])
         latest = df.iloc[-1]['usd']
         values.append(f'<span class="sticky-item"><span class="sticky-label">FX Turnover</span> <span class="sticky-value">{latest:.1f}%</span></span>')
+
+    treas_path = PROC_DIR / 'treasury_foreign_share.csv'
+    if treas_path.exists():
+        df = pd.read_csv(treas_path, parse_dates=['date'], index_col='date')
+        latest = df['foreign_share'].dropna().iloc[-1]
+        values.append(f'<span class="sticky-item"><span class="sticky-label">Foreign Treas.</span> <span class="sticky-value">{latest:.1f}%</span></span>')
 
     dxy_path = PROC_DIR / 'dxy_weekly.csv'
     if dxy_path.exists():
@@ -363,6 +416,49 @@ def build_debt_takeaways():
             <li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>
             {eur_bullet}
             <li>BIS data provides only a USD/EUR/Other breakdown at the aggregate level.</li>
+        </ul>
+    </div>"""
+
+
+def build_treasuries_takeaways():
+    """Return a takeaway panel for the foreign Treasury holdings chart."""
+    path = PROC_DIR / 'treasury_foreign_share.csv'
+    if not path.exists():
+        return ""
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    share = df['foreign_share'].dropna()
+    if len(share) < 5:
+        return ""
+
+    latest_val = share.iloc[-1]
+    latest_date = share.index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    # YoY change by quarter period
+    latest_period = latest_date.to_period('Q')
+    target_period = latest_period - 4
+    yoy_matches = share[share.index.to_period('Q') == target_period]
+    if len(yoy_matches) > 0:
+        delta = latest_val - yoy_matches.iloc[0]
+        direction = "up" if delta > 0 else "down"
+        yoy_bullet = f"<li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>"
+    else:
+        yoy_bullet = ""
+
+    # Historical peak
+    peak_val = share.max()
+    peak_date = share.idxmax()
+    peak_quarter = f"{peak_date.year}-Q{(peak_date.month - 1) // 3 + 1}"
+
+    return f"""
+    <div class="key-takeaways">
+        <h3>Foreign Treasury Holdings</h3>
+        <ul>
+            <li>Foreign investors held {latest_val:.1f}% of total U.S. public debt as of {quarter}.</li>
+            {yoy_bullet}
+            <li>The historical peak was {peak_val:.1f}% in {peak_quarter}.</li>
+            <li>Source: FRED series FDHBFIN (foreign holdings) and GFDEBTN (total public debt).</li>
         </ul>
     </div>"""
 

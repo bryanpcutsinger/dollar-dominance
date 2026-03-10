@@ -147,7 +147,54 @@ def process_bis_debt():
     return shares
 
 
-def build_metadata(cofer=None, dxy=None, debt=None, fx=None):
+def process_treasuries():
+    """Compute foreign holdings of US Treasuries as share of total public debt."""
+    fdhbfin_path = RAW_DIR / 'FDHBFIN.csv'
+    gfdebtn_path = RAW_DIR / 'GFDEBTN.csv'
+
+    if not fdhbfin_path.exists() or not gfdebtn_path.exists():
+        print("  WARNING: FDHBFIN.csv or GFDEBTN.csv not found. Skipping Treasury processing.")
+        return None
+
+    # Read both series
+    foreign = pd.read_csv(fdhbfin_path, parse_dates=['date'], index_col='date')
+    total = pd.read_csv(gfdebtn_path, parse_dates=['date'], index_col='date')
+
+    foreign.columns = ['foreign_billions']
+    total.columns = ['total_millions']
+
+    # Convert to quarterly periods for alignment (raw dates may differ)
+    foreign['period'] = foreign.index.to_period('Q')
+    total['period'] = total.index.to_period('Q')
+
+    # Merge on quarterly period
+    merged = foreign.merge(total, on='period', how='inner')
+
+    # Unit conversion: FDHBFIN is billions, GFDEBTN is millions
+    # Convert FDHBFIN to millions to match
+    merged['foreign_share'] = (merged['foreign_billions'] * 1000 / merged['total_millions']) * 100
+
+    # Sanity check: values should fall within 1-70%
+    out_of_bounds = (merged['foreign_share'] < 1) | (merged['foreign_share'] > 70)
+    if out_of_bounds.any():
+        print(f"  WARNING: {out_of_bounds.sum()} treasury share values outside 1-70% range. Skipping.")
+        return None
+
+    # Build output DataFrame with date index from period
+    result = pd.DataFrame({
+        'date': merged['period'].dt.to_timestamp(how='end'),
+        'foreign_share': merged['foreign_share'].values,
+    })
+    result = result.set_index('date').sort_index().dropna()
+
+    outpath = PROC_DIR / 'treasury_foreign_share.csv'
+    result.to_csv(outpath)
+    print(f"  Treasuries: {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
+    print(f"  Latest foreign share: {result['foreign_share'].iloc[-1]:.1f}%")
+    return result
+
+
+def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None):
     """Create metadata.json with last-observation dates."""
     metadata = {
         "last_updated": datetime.now().isoformat(timespec='seconds'),
@@ -172,6 +219,12 @@ def build_metadata(cofer=None, dxy=None, debt=None, fx=None):
             "source": "BIS"
         }
 
+    if treasuries is not None and len(treasuries) > 0:
+        metadata["sources"]["treasuries"] = {
+            "last_obs": str(treasuries.index[-1].date()),
+            "source": "FRED FDHBFIN / GFDEBTN"
+        }
+
     if dxy is not None and len(dxy) > 0:
         metadata["sources"]["dxy"] = {
             "last_obs": str(dxy.index[-1].date()),
@@ -193,8 +246,9 @@ def process_all():
     dxy = process_dxy()
     fx = process_fx_turnover()
     debt = process_bis_debt()
+    treasuries = process_treasuries()
 
-    build_metadata(cofer=cofer, dxy=dxy, debt=debt, fx=fx)
+    build_metadata(cofer=cofer, dxy=dxy, debt=debt, fx=fx, treasuries=treasuries)
 
 
 if __name__ == '__main__':

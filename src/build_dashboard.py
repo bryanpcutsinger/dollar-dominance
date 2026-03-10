@@ -17,6 +17,7 @@ from src.build_charts import (
     build_chart_debt_securities,
     build_chart_dxy,
     build_chart_fx_turnover,
+    build_chart_treasuries,
 )
 from src.build_components import (
     build_cofer_takeaways,
@@ -26,6 +27,7 @@ from src.build_components import (
     build_key_takeaways,
     build_metric_cards,
     build_sticky_header,
+    build_treasuries_takeaways,
 )
 from src.qualitative_data import methodology_html
 
@@ -49,6 +51,7 @@ def build_dashboard():
     chart_cofer = build_chart_cofer(event_markers=False)
     chart_fx = build_chart_fx_turnover()
     chart_debt = build_chart_debt_securities()
+    chart_treasuries = build_chart_treasuries(event_markers=False)
     chart_dxy = build_chart_dxy(event_markers=False)
 
     # Components
@@ -59,6 +62,7 @@ def build_dashboard():
     cofer_takeaways = build_cofer_takeaways()
     fx_takeaways = build_fx_takeaways()
     debt_takeaways = build_debt_takeaways()
+    treasuries_takeaways = build_treasuries_takeaways()
     dxy_takeaways = build_dxy_takeaways()
     # Qualitative / editorial
     print("  Building qualitative sections...")
@@ -186,11 +190,12 @@ def build_dashboard():
         .badge-reserve {{ background: #e3f2fd; color: #1565c0; }}
         .badge-trade {{ background: #fff3e0; color: #e65100; }}
         .badge-finance {{ background: #f3e5f5; color: #7b1fa2; }}
+        .badge-demand {{ background: #e0f2f1; color: #00695c; }}
         .badge-index {{ background: #e8f5e9; color: #2e7d32; }}
 
         .metric-cards-grid {{
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }}
@@ -375,7 +380,7 @@ def build_dashboard():
 
     <h1>Dollar Dominance Dashboard</h1>
     <p class="subtitle">
-        Tracking the international role of the U.S. dollar across reserves, transactions, debt, and exchange rates<br>
+        Tracking the international role of the U.S. dollar across reserves, transactions, debt, safe assets, and exchange rates<br>
         Last updated: {last_updated}
     </p>
 
@@ -431,6 +436,17 @@ def build_dashboard():
             </div>
             <div class="two-col-right">
                 {debt_takeaways}
+            </div>
+        </div>
+
+        <div class="two-col-layout">
+            <div class="two-col-left">
+                <div class="chart-container" aria-label="Foreign Treasury holdings line chart">
+                    {chart_treasuries}
+                </div>
+            </div>
+            <div class="two-col-right">
+                {treasuries_takeaways}
             </div>
         </div>
 
