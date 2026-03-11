@@ -24,6 +24,7 @@ from src.build_components import (
     build_debt_takeaways,
     build_dxy_takeaways,
     build_fx_takeaways,
+    build_hero_svg,
     build_key_takeaways,
     build_metric_cards,
     build_sticky_header,
@@ -56,6 +57,7 @@ def build_dashboard():
 
     # Components
     print("  Building components...")
+    hero_banner = build_hero_svg(last_updated)
     metric_cards = build_metric_cards()
     key_takeaways = build_key_takeaways()
     sticky_header = build_sticky_header()
@@ -123,6 +125,29 @@ def build_dashboard():
             color: var(--color-text-muted);
             margin-top: 8px;
         }}
+
+        /* ── Hero Banner ── */
+        .hero-banner {{
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 32px;
+            background-color: var(--color-primary);
+        }}
+        .hero-banner svg.hero-bg {{
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }}
+        .hero-content {{
+            position: relative;
+            z-index: 1;
+            padding: 36px 32px 28px;
+        }}
+        .hero-banner h1 {{ color: #ffffff; }}
+        .hero-banner .subtitle {{ color: rgba(255, 255, 255, 0.85); }}
+        .hero-banner .meta-line {{ color: rgba(255, 255, 255, 0.6); }}
 
         /* ── Sticky Header ── */
         .sticky-header {{
@@ -466,11 +491,13 @@ def build_dashboard():
                 padding: 8px 12px;
                 font-size: 13px;
             }}
+            .hero-content {{ padding: 24px 20px 20px; }}
             .author-card {{ flex-direction: column; align-items: center; text-align: center; }}
         }}
         @media (max-width: 480px) {{
             body {{ padding: 12px; }}
             h1 {{ font-size: 22px; }}
+            .hero-content {{ padding: 20px 16px 16px; }}
             .card-value {{ font-size: 24px; }}
             .tab-bar {{
                 overflow-x: auto;
@@ -493,6 +520,11 @@ def build_dashboard():
             .two-col-layout {{ grid-template-columns: 1fr; }}
             .two-col-right {{ position: static; max-height: none; overflow-y: visible; }}
             .chart-container, .metric-card {{ box-shadow: none; break-inside: avoid; }}
+            .hero-bg {{ display: none; }}
+            .hero-banner {{ border-radius: 0; background: none; }}
+            .hero-banner h1 {{ color: var(--color-text); }}
+            .hero-banner .subtitle {{ color: var(--color-text-secondary); }}
+            .hero-banner .meta-line {{ color: var(--color-text-muted); }}
             body {{ background: white; }}
         }}
     </style>
@@ -500,11 +532,7 @@ def build_dashboard():
 <body>
     {sticky_header}
 
-    <header style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e2e0dc;">
-        <h1>Dollar Dominance Dashboard</h1>
-        <p class="subtitle">Tracking the international role of the U.S. dollar across reserves, transactions, debt, safe assets, and exchange rates</p>
-        <p class="meta-line">Last updated: {last_updated} &bull; <a href="#methodology" onclick="switchTab('methodology'); return false;" style="color: #0f5499; text-decoration: none; border-bottom: 1px solid #0f549940;">Methodology &amp; Sources</a></p>
-    </header>
+    {hero_banner}
 
     <!-- Tab Bar -->
     <div class="tab-bar" role="tablist" aria-label="Dashboard sections">

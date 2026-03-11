@@ -29,6 +29,36 @@ def _delta_html(delta, units="pp", horizon="YoY"):
     return f'<span style="color:{color};">{arrow} {sign}{delta:.1f} {units} {horizon}</span>'
 
 
+def build_hero_svg(last_updated):
+    """Return the hero banner HTML with inline SVG background."""
+    return f"""<header class="hero-banner">
+    <svg class="hero-bg" viewBox="0 0 1400 180" preserveAspectRatio="xMidYMid slice"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation">
+        <defs>
+            <linearGradient id="hero-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#0f5499"/>
+                <stop offset="70%" stop-color="#1a6bc4"/>
+                <stop offset="100%" stop-color="#0f5499" stop-opacity="0.85"/>
+            </linearGradient>
+        </defs>
+        <rect width="1400" height="180" fill="url(#hero-grad)"/>
+        <path d="M300,180 L300,155 L360,150 L420,140 L480,135 L480,180Z" fill="rgba(255,255,255,0.12)"/>
+        <rect x="560" y="150" width="30" height="30" rx="2" fill="rgba(255,255,255,0.12)"/>
+        <rect x="598" y="140" width="30" height="40" rx="2" fill="rgba(255,255,255,0.12)"/>
+        <rect x="636" y="155" width="30" height="25" rx="2" fill="rgba(255,255,255,0.12)"/>
+        <path d="M750,180 L750,160 Q800,145 850,140 L850,180Z" fill="rgba(255,255,255,0.12)"/>
+        <polyline points="940,165 980,155 1020,148 1060,152 1100,158" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5" stroke-linecap="round"/>
+        <polyline points="1150,160 1175,150 1200,162 1225,145 1250,155" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="1100" y="110" font-size="200" font-weight="900" fill="rgba(255,255,255,0.08)" font-family="Arial,sans-serif">$</text>
+    </svg>
+    <div class="hero-content">
+        <h1>Dollar Dominance Dashboard</h1>
+        <p class="subtitle">Tracking the international role of the U.S. dollar across reserves, transactions, debt, safe assets, and exchange rates</p>
+        <p class="meta-line">Last updated: {last_updated}</p>
+    </div>
+</header>"""
+
+
 def build_metric_cards():
     """Return 4 metric cards as an HTML grid."""
     cards = []
