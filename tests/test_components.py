@@ -96,11 +96,11 @@ class TestDeltaFormatting:
         """Negative delta should show red arrow."""
         from src.build_components import _delta_html
         result = _delta_html(-2.3)
-        assert 'd62728' in result  # red color
+        assert 'c22a2a' in result  # red color
         assert '-2.3' in result
 
     def test_zero_delta(self):
         """Near-zero delta should show gray dash."""
         from src.build_components import _delta_html
         result = _delta_html(0.01)
-        assert '999' in result  # gray
+        assert '737385' in result  # gray

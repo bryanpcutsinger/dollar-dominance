@@ -42,15 +42,15 @@ BIS_BULK_DEBT_URL = "https://data.bis.org/static/bulk/WS_DEBT_SEC2_PUB_csv_col.z
 
 # Chart color palette
 COLORS = {
-    'USD': '#1f77b4',   # Blue
-    'EUR': '#2ca02c',   # Green
-    'CNY': '#d62728',   # Red
-    'JPY': '#ff7f0e',   # Orange
-    'GBP': '#9467bd',   # Purple
-    'CHF': '#8c564b',   # Brown
-    'AUD': '#e377c2',   # Pink
-    'CAD': '#bcbd22',   # Yellow-green
-    'Other': '#7f7f7f', # Gray
+    'USD': '#0f5499',   # Institutional blue
+    'EUR': '#66a61e',   # Muted green
+    'CNY': '#d92020',   # Red
+    'JPY': '#e6a000',   # Amber
+    'GBP': '#7b5ea7',   # Purple
+    'CHF': '#a0522d',   # Sienna
+    'AUD': '#c45b8a',   # Rose
+    'CAD': '#8a9a2e',   # Olive
+    'Other': '#8c8c8c', # Gray
 }
 
 # Event markers for time series charts

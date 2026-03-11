@@ -19,9 +19,12 @@ PROC_DIR = Path('data/processed')
 # Plotly layout defaults
 LAYOUT_DEFAULTS = dict(
     template='plotly_white',
-    font=dict(family='Segoe UI, system-ui, -apple-system, sans-serif', size=12),
-    margin=dict(l=60, r=60, t=50, b=90),
+    font=dict(family='Inter, -apple-system, system-ui, sans-serif', size=12, color='#5a5a7a'),
+    margin=dict(l=50, r=40, t=60, b=80),
     hovermode='x unified',
+    plot_bgcolor='white',
+    paper_bgcolor='white',
+    hoverlabel=dict(bgcolor='white', font_size=12, font_family='Inter, sans-serif', bordercolor='#e2e0dc'),
 )
 
 PLOTLY_CONFIG = {'displayModeBar': True, 'displaylogo': False}
@@ -29,7 +32,7 @@ PLOTLY_CONFIG = {'displayModeBar': True, 'displaylogo': False}
 
 def _placeholder(message):
     """Return a placeholder div for missing data."""
-    return f'<div style="padding:40px;text-align:center;color:#999;font-style:italic;">{message}</div>'
+    return f'<div style="padding:40px;text-align:center;color:#737385;font-style:italic;">{message}</div>'
 
 
 def _add_event_markers(fig, events=None, y_range=None):
@@ -41,12 +44,12 @@ def _add_event_markers(fig, events=None, y_range=None):
             continue  # handled separately in COFER chart
         fig.add_shape(
             type="line", x0=date_str, x1=date_str, y0=0, y1=1,
-            yref="paper", line=dict(color="#ccc", width=1, dash="dot"),
+            yref="paper", line=dict(color="#d4d2ce", width=1, dash="dot"),
         )
         fig.add_annotation(
             x=date_str, y=1, yref="paper",
             text=label, showarrow=False,
-            font=dict(size=10, color="#717171"),
+            font=dict(size=10, color="#737385"),
             yshift=10,
         )
 
@@ -89,7 +92,7 @@ def build_chart_cofer(event_markers=True):
         text=f"<b>USD: {latest_usd:.1f}%</b><br>({quarter})",
         showarrow=True, arrowhead=2, ax=60, ay=-30,
         font=dict(size=12, color=COLORS['USD']),
-        bgcolor="white", bordercolor=COLORS['USD'], borderwidth=1,
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['USD'], borderwidth=0.5,
     )
 
     # Event markers
@@ -99,12 +102,12 @@ def build_chart_cofer(event_markers=True):
         # COFER methodology change marker
         fig.add_shape(
             type="line", x0='2025-07-01', x1='2025-07-01', y0=0, y1=1,
-            yref="paper", line=dict(color="#d62728", width=1, dash="dash"),
+            yref="paper", line=dict(color="#c22a2a", width=1, dash="dash"),
         )
         fig.add_annotation(
             x='2025-07-01', y=1, yref="paper",
             text="COFER methodology change", showarrow=False,
-            font=dict(size=9, color="#d62728"), yshift=10,
+            font=dict(size=9, color="#c22a2a"), yshift=10,
         )
 
     fig.update_layout(
@@ -112,7 +115,8 @@ def build_chart_cofer(event_markers=True):
         title="Central Bank FX Reserves by Currency (IMF COFER)",
         yaxis=dict(title="Share of Reserves (%)", range=[0, 100]),
         xaxis=dict(title=""),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
     )
 
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
@@ -145,14 +149,15 @@ def build_chart_fx_turnover():
         barmode='group',
         yaxis=dict(title="Share of Turnover (% of 200% total)", range=[0, 100]),
         xaxis=dict(title=""),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
     )
 
     # Add note about 200% total (below the legend)
     fig.add_annotation(
         text="Note: Shares sum to 200% as two currencies are involved in each FX transaction. Source: BIS Triennial Central Bank Survey.",
         xref="paper", yref="paper", x=0, y=-0.28, showarrow=False,
-        font=dict(size=10, color="#666"), align="left",
+        font=dict(size=10, color="#737385"), align="left",
     )
 
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
@@ -194,7 +199,7 @@ def build_chart_debt_securities():
         text=f"<b>USD: {latest_usd:.1f}%</b><br>({quarter})",
         showarrow=True, arrowhead=2, ax=60, ay=-30,
         font=dict(size=12, color=COLORS['USD']),
-        bgcolor="white", bordercolor=COLORS['USD'], borderwidth=1,
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['USD'], borderwidth=0.5,
     )
 
     fig.update_layout(
@@ -202,7 +207,8 @@ def build_chart_debt_securities():
         title="Currency Denomination of International Debt Securities (BIS)",
         yaxis=dict(title="Share (%)", range=[0, 100]),
         xaxis=dict(title=""),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
     )
 
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
@@ -220,7 +226,7 @@ def build_chart_treasuries(event_markers=True):
     fig.add_trace(go.Scatter(
         x=df.index, y=df['foreign_share'],
         name='Foreign Share of US Treasuries',
-        line=dict(color=COLORS['USD'], width=1.5),
+        line=dict(color=COLORS['USD'], width=2),
     ))
 
     if event_markers:
@@ -236,7 +242,7 @@ def build_chart_treasuries(event_markers=True):
         text=f"<b>{latest_val:.1f}%</b><br>({quarter})",
         showarrow=True, arrowhead=2, ax=-60, ay=-30,
         font=dict(size=12, color=COLORS['USD']),
-        bgcolor="white", bordercolor=COLORS['USD'], borderwidth=1,
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['USD'], borderwidth=0.5,
     )
 
     fig.update_layout(
@@ -244,7 +250,8 @@ def build_chart_treasuries(event_markers=True):
         title="Foreign Holdings of U.S. Treasury Debt (FRED)",
         yaxis=dict(title="Share of Total Debt (%)", range=[0, 50]),
         xaxis=dict(title=""),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
     )
 
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
@@ -262,7 +269,7 @@ def build_chart_dxy(event_markers=True):
     fig.add_trace(go.Scatter(
         x=dxy.index, y=dxy['dxy'],
         name='Dollar Index (DXY)',
-        line=dict(color=COLORS['USD'], width=1.5),
+        line=dict(color=COLORS['USD'], width=2),
     ))
     if event_markers:
         _add_event_markers(fig)
@@ -272,7 +279,8 @@ def build_chart_dxy(event_markers=True):
         title="U.S. Dollar Index (DTWEXBGS)",
         yaxis=dict(title="Index"),
         xaxis=dict(title="", range=[dxy.index.min(), dxy.index.max()]),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
     )
 
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)

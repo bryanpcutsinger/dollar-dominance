@@ -17,14 +17,14 @@ PROC_DIR = Path('data/processed')
 def _delta_html(delta, units="pp", horizon="YoY"):
     """Format a delta value with arrow, color, and time horizon label."""
     if abs(delta) < 0.05:
-        return f'<span style="color:#999;">— 0.0 {units} {horizon}</span>'
+        return f'<span style="color:#737385;">— 0.0 {units} {horizon}</span>'
     if delta > 0:
         arrow = "&#9650;"  # ▲
         color = "#0d7a3f"
         sign = "+"
     else:
         arrow = "&#9660;"  # ▼
-        color = "#d62728"
+        color = "#c22a2a"
         sign = ""
     return f'<span style="color:{color};">{arrow} {sign}{delta:.1f} {units} {horizon}</span>'
 
@@ -49,7 +49,7 @@ def build_metric_cards():
             delta_str = ""
         quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
         cards.append(f"""
-        <div class="metric-card">
+        <div class="metric-card" style="border-left-color: #0f5499;">
             <div class="category-badge badge-reserve">RESERVE</div>
             <div class="card-label">FX Reserves</div>
             <div class="card-value">{latest_val:.1f}%</div>
@@ -69,7 +69,7 @@ def build_metric_cards():
             horizon = f"vs {int(prior['year'])}"
             delta_str = _delta_html(delta, horizon=horizon)
             cards.append(f"""
-        <div class="metric-card">
+        <div class="metric-card" style="border-left-color: #b07800;">
             <div class="category-badge badge-trade">TRADE</div>
             <div class="card-label">FX Turnover</div>
             <div class="card-value">{latest['usd']:.1f}%</div>
@@ -79,7 +79,7 @@ def build_metric_cards():
         elif len(rows) == 1:
             latest = rows.iloc[-1]
             cards.append(f"""
-        <div class="metric-card">
+        <div class="metric-card" style="border-left-color: #b07800;">
             <div class="category-badge badge-trade">TRADE</div>
             <div class="card-label">FX Turnover</div>
             <div class="card-value">{latest['usd']:.1f}%</div>
@@ -101,7 +101,7 @@ def build_metric_cards():
             delta_str = ""
         quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
         cards.append(f"""
-        <div class="metric-card">
+        <div class="metric-card" style="border-left-color: #5b3e8a;">
             <div class="category-badge badge-finance">FINANCE</div>
             <div class="card-label">Debt Securities</div>
             <div class="card-value">{latest_val:.1f}%</div>
@@ -127,7 +127,7 @@ def build_metric_cards():
             delta_str = ""
         quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
         cards.append(f"""
-        <div class="metric-card">
+        <div class="metric-card" style="border-left-color: #0a6a5a;">
             <div class="category-badge badge-demand">DEMAND</div>
             <div class="card-label">Foreign Treasury Holdings</div>
             <div class="card-value">{latest_val:.1f}%</div>
@@ -151,7 +151,7 @@ def build_metric_cards():
             delta_str = ""
         date_str = latest_date.strftime('%b %d, %Y')
         cards.append(f"""
-        <div class="metric-card">
+        <div class="metric-card" style="border-left-color: #3a6e1e;">
             <div class="category-badge badge-index">INDEX</div>
             <div class="card-label">Dollar Index (DXY)</div>
             <div class="card-value">{latest_val:.1f}</div>
