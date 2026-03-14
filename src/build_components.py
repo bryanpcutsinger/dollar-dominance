@@ -52,8 +52,8 @@ def build_hero_svg(last_updated):
         <text x="1100" y="110" font-size="200" font-weight="900" fill="rgba(255,255,255,0.08)" font-family="Arial,sans-serif">$</text>
     </svg>
     <div class="hero-content">
-        <h1>Dollar Dominance Dashboard</h1>
-        <p class="subtitle">Tracking the international role of the U.S. dollar across reserves, transactions, debt, safe assets, and exchange rates</p>
+        <h1>The Treasury Standard</h1>
+        <p class="subtitle">Monitoring dollar dominance across reserves, transactions, debt markets, foreign demand, and the structural foundations of the international monetary system</p>
         <p class="meta-line">Last updated: {last_updated}</p>
     </div>
 </header>"""
@@ -165,7 +165,79 @@ def build_metric_cards():
             <div class="card-date">{quarter} &middot; FRED</div>
         </div>""")
 
-    # Card 5: Dollar Index (DXY)
+    # Card 5: Fed Treasury Holdings (FRED) — independent CSV
+    fed_path = PROC_DIR / 'treasury_fed_share.csv'
+    if fed_path.exists():
+        df_fed = pd.read_csv(fed_path, parse_dates=['date'], index_col='date')
+        fed = df_fed['fed_share'].dropna()
+        if len(fed) > 0:
+            fed_val = fed.iloc[-1]
+            fed_date = fed.index[-1]
+            fed_period = fed_date.to_period('Q')
+            fed_target = fed_period - 4
+            fed_yoy = fed[fed.index.to_period('Q') == fed_target]
+            if len(fed_yoy) > 0:
+                fed_delta = fed_val - fed_yoy.iloc[0]
+                fed_delta_str = _delta_html(fed_delta)
+            else:
+                fed_delta_str = ""
+            fed_quarter = f"{fed_date.year}-Q{(fed_date.month - 1) // 3 + 1}"
+            cards.append(f"""
+        <div class="metric-card" style="border-left-color: #8c6bb1;">
+            <div class="category-badge badge-fed">FED</div>
+            <div class="card-label">Fed Treasury Holdings</div>
+            <div class="card-value">{fed_val:.1f}%</div>
+            <div class="card-delta">{fed_delta_str}</div>
+            <div class="card-date">{fed_quarter} &middot; FRED</div>
+        </div>""")
+
+    # Card 6: Current Account (% of GDP)
+    ca_path = PROC_DIR / 'current_account_gdp.csv'
+    if ca_path.exists():
+        df_ca = pd.read_csv(ca_path, parse_dates=['date'], index_col='date')
+        ca = df_ca['ca_pct_gdp'].dropna()
+        if len(ca) > 0:
+            ca_val = ca.iloc[-1]
+            ca_date = ca.index[-1]
+            ca_quarter = f"{ca_date.year}-Q{(ca_date.month - 1) // 3 + 1}"
+            if len(ca) > 4:
+                ca_delta = ca_val - ca.iloc[-5]
+                ca_delta_str = _delta_html(ca_delta)
+            else:
+                ca_delta_str = ""
+            cards.append(f"""
+        <div class="metric-card" style="border-left-color: #2563eb;">
+            <div class="category-badge badge-structural">STRUCTURAL</div>
+            <div class="card-label">Current Account (% of GDP)</div>
+            <div class="card-value">{ca_val:.1f}%</div>
+            <div class="card-delta">{ca_delta_str}</div>
+            <div class="card-date">{ca_quarter} &middot; FRED</div>
+        </div>""")
+
+    # Card 7: Federal Debt-to-GDP
+    dtg_path = PROC_DIR / 'debt_to_gdp.csv'
+    if dtg_path.exists():
+        df_dtg = pd.read_csv(dtg_path, parse_dates=['date'], index_col='date')
+        dtg = df_dtg['debt_gdp'].dropna()
+        if len(dtg) > 0:
+            dtg_val = dtg.iloc[-1]
+            dtg_date = dtg.index[-1]
+            dtg_quarter = f"{dtg_date.year}-Q{(dtg_date.month - 1) // 3 + 1}"
+            if len(dtg) > 4:
+                dtg_delta = dtg_val - dtg.iloc[-5]
+                dtg_delta_str = _delta_html(dtg_delta)
+            else:
+                dtg_delta_str = ""
+            cards.append(f"""
+        <div class="metric-card" style="border-left-color: #dc2626;">
+            <div class="category-badge badge-structural">STRUCTURAL</div>
+            <div class="card-label">Federal Debt-to-GDP</div>
+            <div class="card-value">{dtg_val:.1f}%</div>
+            <div class="card-delta">{dtg_delta_str}</div>
+            <div class="card-date">{dtg_quarter} &middot; FRED</div>
+        </div>""")
+
+    # Card 8: Dollar Index (DXY)
     dxy_path = PROC_DIR / 'dxy_weekly.csv'
     if dxy_path.exists():
         df = pd.read_csv(dxy_path, parse_dates=['date'], index_col='date')
@@ -264,7 +336,7 @@ def build_key_takeaways():
                 delta = latest - yoy_matches.iloc[0]
                 direction = "down" if delta < 0 else "up"
                 takeaways.append(
-                    f"Foreign investors held {latest:.1f}% of total U.S. public debt as of {quarter}, "
+                    f"Foreign investors held {latest:.1f}% of publicly held federal debt as of {quarter}, "
                     f"{direction} {abs(delta):.1f} pp from a year ago."
                 )
 
@@ -332,7 +404,7 @@ def build_sticky_header():
     return f"""
     <div id="sticky-header" class="sticky-header">
         <div class="sticky-inner">
-            <span class="sticky-title">Dollar Dominance</span>
+            <span class="sticky-title">The Treasury Standard</span>
             {separator.join(values)}
         </div>
     </div>"""
@@ -485,10 +557,53 @@ def build_treasuries_takeaways():
     <div class="key-takeaways">
         <h3>Foreign Treasury Holdings</h3>
         <ul>
-            <li>Foreign investors held {latest_val:.1f}% of total U.S. public debt as of {quarter}.</li>
+            <li>Foreign investors held {latest_val:.1f}% of publicly held federal debt as of {quarter}.</li>
             {yoy_bullet}
             <li>The historical peak was {peak_val:.1f}% in {peak_quarter}.</li>
-            <li>Source: FRED series FDHBFIN (foreign holdings) and GFDEBTN (total public debt).</li>
+            <li>Source: FRED series FDHBFIN (foreign holdings) and FYGFDPUN (debt held by public).</li>
+        </ul>
+    </div>"""
+
+
+def build_fed_holdings_takeaways():
+    """Return a takeaway panel for the Fed Treasury holdings chart."""
+    path = PROC_DIR / 'treasury_fed_share.csv'
+    if not path.exists():
+        return ""
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    fed = df['fed_share'].dropna()
+    if len(fed) < 5:
+        return ""
+
+    latest_val = fed.iloc[-1]
+    latest_date = fed.index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    # YoY change
+    latest_period = latest_date.to_period('Q')
+    target_period = latest_period - 4
+    yoy_matches = fed[fed.index.to_period('Q') == target_period]
+    if len(yoy_matches) > 0:
+        delta = latest_val - yoy_matches.iloc[0]
+        direction = "up" if delta > 0 else "down"
+        yoy_bullet = f"<li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>"
+    else:
+        yoy_bullet = ""
+
+    # Historical peak
+    peak_val = fed.max()
+    peak_date = fed.idxmax()
+    peak_quarter = f"{peak_date.year}-Q{(peak_date.month - 1) // 3 + 1}"
+
+    return f"""
+    <div class="key-takeaways">
+        <h3>Fed Treasury Holdings</h3>
+        <ul>
+            <li>The Federal Reserve held {latest_val:.1f}% of publicly held federal debt as of {quarter}.</li>
+            {yoy_bullet}
+            <li>The historical peak was {peak_val:.1f}% in {peak_quarter}.</li>
+            <li>Source: FRED series FDHBFRBN (Fed holdings) and FYGFDPUN (debt held by public).</li>
         </ul>
     </div>"""
 
@@ -525,6 +640,78 @@ def build_dxy_takeaways():
             <li>That is {direction} {abs(delta_pct):.1f}% from a year ago.</li>
             <li>Within this dataset, the index ranged from {all_time_low:.1f} ({low_date}) to {all_time_high:.1f} ({high_date}).</li>
             <li>DTWEXBGS is a trade-weighted broad index covering 26 currencies, published by the Federal Reserve.</li>
+        </ul>
+    </div>"""
+
+
+def build_current_account_takeaways():
+    """Return a takeaway panel for the current account chart."""
+    path = PROC_DIR / 'current_account_gdp.csv'
+    if not path.exists():
+        return ""
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    ca = df['ca_pct_gdp'].dropna()
+    if len(ca) < 5:
+        return ""
+
+    latest_val = ca.iloc[-1]
+    latest_date = ca.index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    # YoY change
+    comp_val = ca.iloc[-5]
+    delta = latest_val - comp_val
+    direction = "up" if delta > 0 else "down"
+
+    # Post-1990 context
+    post_1990 = ca[ca.index >= '1990-01-01']
+    neg_pct = (post_1990 < 0).mean() * 100
+
+    return f"""
+    <div class="key-takeaways">
+        <h3>Current Account</h3>
+        <ul>
+            <li>The U.S. current account balance was {latest_val:.1f}% of GDP as of {quarter}.</li>
+            <li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>
+            <li>The U.S. has run a current account deficit in {neg_pct:.0f}% of quarters since 1990, reflecting its role as supplier of the world's primary reserve asset.</li>
+            <li>Source: FRED series NETFI (current account) and GDP.</li>
+        </ul>
+    </div>"""
+
+
+def build_debt_to_gdp_takeaways():
+    """Return a takeaway panel for the debt-to-GDP chart."""
+    path = PROC_DIR / 'debt_to_gdp.csv'
+    if not path.exists():
+        return ""
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    dtg = df['debt_gdp'].dropna()
+    if len(dtg) < 5:
+        return ""
+
+    latest_val = dtg.iloc[-1]
+    latest_date = dtg.index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    # YoY change
+    comp_val = dtg.iloc[-5]
+    delta = latest_val - comp_val
+    direction = "up" if delta > 0 else "down"
+
+    # Pre-2008 vs post-2008 averages
+    pre_2008 = dtg[dtg.index < '2008-01-01'].mean()
+    post_2008 = dtg[dtg.index >= '2008-01-01'].mean()
+
+    return f"""
+    <div class="key-takeaways">
+        <h3>Debt-to-GDP</h3>
+        <ul>
+            <li>U.S. federal debt stood at {latest_val:.1f}% of GDP as of {quarter}.</li>
+            <li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>
+            <li>The average debt-to-GDP ratio rose from {pre_2008:.0f}% (pre-2008) to {post_2008:.0f}% (post-2008), accelerating after the GFC and COVID.</li>
+            <li>Source: FRED series GFDEGDQ188S.</li>
         </ul>
     </div>"""
 

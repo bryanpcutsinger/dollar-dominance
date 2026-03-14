@@ -84,6 +84,102 @@ class TestTreasuryProcessing:
         assert df['foreign_share'].max() <= 70, "Foreign share above 70%"
 
 
+class TestTreasuryDecoupledPipeline:
+    """Test decoupled foreign and Fed Treasury share pipelines."""
+
+    def test_foreign_share_independent(self):
+        """process_treasuries() should produce foreign_share only, no fed columns."""
+        from src.process_data import RAW_DIR, process_treasuries
+
+        if not (RAW_DIR / 'FDHBFIN.csv').exists():
+            pytest.skip("FDHBFIN.csv not present")
+
+        result = process_treasuries()
+        if result is not None:
+            assert 'foreign_share' in result.columns
+            assert 'fed_share' not in result.columns
+            assert 'domestic_private_share' not in result.columns
+
+    def test_fed_share_sanity(self):
+        """Fed share values should fall within 1-50% range."""
+        path = Path('data/processed/treasury_fed_share.csv')
+        if not path.exists():
+            pytest.skip("treasury_fed_share.csv not found — run pipeline first")
+
+        df = pd.read_csv(path)
+        fed = df['fed_share'].dropna()
+        assert fed.min() >= 1, f"Fed share below 1%: {fed.min()}"
+        assert fed.max() <= 50, f"Fed share above 50%: {fed.max()}"
+
+    def test_fed_share_independent(self):
+        """Fed share CSV should exist independently and may have newer data than foreign share."""
+        foreign_path = Path('data/processed/treasury_foreign_share.csv')
+        fed_path = Path('data/processed/treasury_fed_share.csv')
+        if not foreign_path.exists() or not fed_path.exists():
+            pytest.skip("Both treasury CSVs required — run pipeline first")
+
+        foreign_df = pd.read_csv(foreign_path, parse_dates=['date'])
+        fed_df = pd.read_csv(fed_path, parse_dates=['date'])
+
+        # Both should have data
+        assert len(foreign_df) > 0, "Foreign share CSV is empty"
+        assert len(fed_df) > 0, "Fed share CSV is empty"
+
+        # Fed data should extend at least as far as foreign data
+        assert fed_df['date'].max() >= foreign_df['date'].max(), \
+            "Fed share data should not end before foreign share data"
+
+
+class TestCurrentAccount:
+    """Test current account processing."""
+
+    def test_ca_pct_gdp_in_range(self):
+        """Current account values should be between -8% and +3%."""
+        path = Path('data/processed/current_account_gdp.csv')
+        if not path.exists():
+            pytest.skip("current_account_gdp.csv not found — run pipeline first")
+
+        df = pd.read_csv(path)
+        assert df['ca_pct_gdp'].min() >= -8, f"CA/GDP below -8%: {df['ca_pct_gdp'].min()}"
+        assert df['ca_pct_gdp'].max() <= 5, f"CA/GDP above +5%: {df['ca_pct_gdp'].max()}"
+
+    def test_ca_typically_negative(self):
+        """Most post-1990 observations should be negative (persistent deficits)."""
+        path = Path('data/processed/current_account_gdp.csv')
+        if not path.exists():
+            pytest.skip("current_account_gdp.csv not found — run pipeline first")
+
+        df = pd.read_csv(path, parse_dates=['date'])
+        post_1990 = df[df['date'] >= '1990-01-01']
+        neg_share = (post_1990['ca_pct_gdp'] < 0).mean()
+        assert neg_share > 0.9, f"Only {neg_share:.0%} of post-1990 observations are negative"
+
+
+class TestDebtToGDP:
+    """Test debt-to-GDP processing."""
+
+    def test_debt_gdp_in_range(self):
+        """Debt-to-GDP values should be between 20% and 200%."""
+        path = Path('data/processed/debt_to_gdp.csv')
+        if not path.exists():
+            pytest.skip("debt_to_gdp.csv not found — run pipeline first")
+
+        df = pd.read_csv(path)
+        assert df['debt_gdp'].min() >= 20, f"Debt/GDP below 20%: {df['debt_gdp'].min()}"
+        assert df['debt_gdp'].max() <= 200, f"Debt/GDP above 200%: {df['debt_gdp'].max()}"
+
+    def test_debt_gdp_increasing_recent(self):
+        """Post-2008 values should be higher than pre-2008 average."""
+        path = Path('data/processed/debt_to_gdp.csv')
+        if not path.exists():
+            pytest.skip("debt_to_gdp.csv not found — run pipeline first")
+
+        df = pd.read_csv(path, parse_dates=['date'])
+        pre_2008 = df[df['date'] < '2008-01-01']['debt_gdp'].mean()
+        post_2008 = df[df['date'] >= '2008-01-01']['debt_gdp'].mean()
+        assert post_2008 > pre_2008, f"Post-2008 avg ({post_2008:.1f}%) not higher than pre-2008 ({pre_2008:.1f}%)"
+
+
 class TestDebtSecurities:
     """Test BIS debt securities share computation."""
 

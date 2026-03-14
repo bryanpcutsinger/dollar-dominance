@@ -29,7 +29,11 @@ if FRED_API_KEY == 'YOUR_KEY_HERE':
 FRED_SERIES = {
     'DTWEXBGS': 'Nominal Broad U.S. Dollar Index',
     'FDHBFIN': 'Federal Debt Held by Foreign and International Investors',
-    'GFDEBTN': 'Federal Debt: Total Public Debt',
+    'FYGFDPUN': 'Federal Debt Held by the Public',
+    'FDHBFRBN': 'Federal Debt Held by Federal Reserve Banks',
+    'NETFI': 'Balance on Current Account, NIPAs',
+    'GDP': 'Gross Domestic Product',
+    'GFDEGDQ188S': 'Federal Debt: Total Public Debt as Percent of GDP',
 }
 
 # IMF COFER — primary source is IMF SDMX API, DBnomics as fallback
@@ -51,6 +55,11 @@ COLORS = {
     'AUD': '#c45b8a',   # Rose
     'CAD': '#8a9a2e',   # Olive
     'Other': '#8c8c8c', # Gray
+    'Fed': '#8c6bb1',       # Purple (Fed holdings)
+    'Foreign': '#0f5499',   # Blue (foreign holdings)
+    'DomesticPrivate': '#b0b0b0',  # Gray (domestic private)
+    'CurrentAccount': '#2563eb',    # Blue (current account)
+    'DebtGDP': '#dc2626',           # Red (debt-to-GDP)
 }
 
 # Event markers for time series charts

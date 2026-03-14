@@ -215,7 +215,7 @@ def build_chart_debt_securities():
 
 
 def build_chart_treasuries(event_markers=True):
-    """Chart: Foreign holdings of US Treasuries as share of total debt."""
+    """Chart: Foreign holdings of US Treasuries as share of publicly held debt."""
     path = PROC_DIR / 'treasury_foreign_share.csv'
     if not path.exists():
         return _placeholder("Foreign Treasury holdings data unavailable.")
@@ -226,13 +226,12 @@ def build_chart_treasuries(event_markers=True):
     fig.add_trace(go.Scatter(
         x=df.index, y=df['foreign_share'],
         name='Foreign Share of US Treasuries',
-        line=dict(color=COLORS['USD'], width=2),
+        line=dict(color=COLORS['Foreign'], width=2),
     ))
 
     if event_markers:
         _add_event_markers(fig)
 
-    # Latest value annotation
     latest_val = df['foreign_share'].dropna().iloc[-1]
     latest_date = df['foreign_share'].dropna().index[-1]
     quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
@@ -241,14 +240,146 @@ def build_chart_treasuries(event_markers=True):
         x=latest_date, y=latest_val,
         text=f"<b>{latest_val:.1f}%</b><br>({quarter})",
         showarrow=True, arrowhead=2, ax=-60, ay=-30,
-        font=dict(size=12, color=COLORS['USD']),
-        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['USD'], borderwidth=0.5,
+        font=dict(size=12, color=COLORS['Foreign']),
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['Foreign'], borderwidth=0.5,
     )
 
     fig.update_layout(
         **LAYOUT_DEFAULTS,
         title="Foreign Holdings of U.S. Treasury Debt (FRED)",
-        yaxis=dict(title="Share of Total Debt (%)", range=[0, 50]),
+        yaxis=dict(title="Share of Publicly Held Debt (%)", range=[0, 50]),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
+
+
+def build_chart_fed_holdings(event_markers=True):
+    """Chart: Federal Reserve holdings of US Treasuries as share of publicly held debt."""
+    path = PROC_DIR / 'treasury_fed_share.csv'
+    if not path.exists():
+        return _placeholder("Fed Treasury holdings data unavailable.")
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df['fed_share'],
+        name='Fed Share of US Treasuries',
+        line=dict(color=COLORS['Fed'], width=2),
+    ))
+
+    if event_markers:
+        _add_event_markers(fig)
+
+    fed = df['fed_share'].dropna()
+    latest_val = fed.iloc[-1]
+    latest_date = fed.index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    fig.add_annotation(
+        x=latest_date, y=latest_val,
+        text=f"<b>{latest_val:.1f}%</b><br>({quarter})",
+        showarrow=True, arrowhead=2, ax=-60, ay=-30,
+        font=dict(size=12, color=COLORS['Fed']),
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['Fed'], borderwidth=0.5,
+    )
+
+    fig.update_layout(
+        **LAYOUT_DEFAULTS,
+        title="Federal Reserve Holdings of U.S. Treasury Debt (FRED)",
+        yaxis=dict(title="Share of Publicly Held Debt (%)", range=[0, 35]),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
+
+
+def build_chart_current_account(event_markers=True):
+    """Chart: U.S. current account balance as percent of GDP."""
+    path = PROC_DIR / 'current_account_gdp.csv'
+    if not path.exists():
+        return _placeholder("Current account data unavailable.")
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df['ca_pct_gdp'],
+        name='Current Account (% of GDP)',
+        line=dict(color=COLORS['CurrentAccount'], width=2),
+    ))
+
+    # Zero reference line
+    fig.add_hline(y=0, line_dash="dot", line_color="#d4d2ce")
+
+    if event_markers:
+        _add_event_markers(fig)
+
+    # Latest-value annotation
+    latest_val = df['ca_pct_gdp'].dropna().iloc[-1]
+    latest_date = df['ca_pct_gdp'].dropna().index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    fig.add_annotation(
+        x=latest_date, y=latest_val,
+        text=f"<b>{latest_val:.1f}%</b><br>({quarter})",
+        showarrow=True, arrowhead=2, ax=-60, ay=-30,
+        font=dict(size=12, color=COLORS['CurrentAccount']),
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['CurrentAccount'], borderwidth=0.5,
+    )
+
+    fig.update_layout(
+        **LAYOUT_DEFAULTS,
+        title="U.S. Current Account Balance (% of GDP)",
+        yaxis=dict(title="Current Account (% of GDP)"),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
+
+
+def build_chart_debt_to_gdp(event_markers=True):
+    """Chart: U.S. federal debt-to-GDP ratio."""
+    path = PROC_DIR / 'debt_to_gdp.csv'
+    if not path.exists():
+        return _placeholder("Debt-to-GDP data unavailable.")
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df['debt_gdp'],
+        name='Federal Debt (% of GDP)',
+        line=dict(color=COLORS['DebtGDP'], width=2),
+    ))
+
+    if event_markers:
+        _add_event_markers(fig)
+
+    # Latest-value annotation
+    latest_val = df['debt_gdp'].dropna().iloc[-1]
+    latest_date = df['debt_gdp'].dropna().index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    fig.add_annotation(
+        x=latest_date, y=latest_val,
+        text=f"<b>{latest_val:.1f}%</b><br>({quarter})",
+        showarrow=True, arrowhead=2, ax=-60, ay=-30,
+        font=dict(size=12, color=COLORS['DebtGDP']),
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['DebtGDP'], borderwidth=0.5,
+    )
+
+    fig.update_layout(
+        **LAYOUT_DEFAULTS,
+        title="U.S. Federal Debt-to-GDP Ratio (FRED)",
+        yaxis=dict(title="Federal Debt (% of GDP)", rangemode="tozero"),
         xaxis=dict(title=""),
         legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
                     font=dict(size=11), bgcolor='rgba(0,0,0,0)'),

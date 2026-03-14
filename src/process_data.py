@@ -148,53 +148,174 @@ def process_bis_debt():
 
 
 def process_treasuries():
-    """Compute foreign holdings of US Treasuries as share of total public debt."""
-    fdhbfin_path = RAW_DIR / 'FDHBFIN.csv'
-    gfdebtn_path = RAW_DIR / 'GFDEBTN.csv'
+    """Compute foreign share of publicly held US federal debt.
 
-    if not fdhbfin_path.exists() or not gfdebtn_path.exists():
-        print("  WARNING: FDHBFIN.csv or GFDEBTN.csv not found. Skipping Treasury processing.")
+    Foreign share: FDHBFIN (billions) × 1000 / FYGFDPUN (millions) × 100.
+    Output: treasury_foreign_share.csv with columns: date, foreign_share.
+    """
+    fdhbfin_path = RAW_DIR / 'FDHBFIN.csv'
+    fygfdpun_path = RAW_DIR / 'FYGFDPUN.csv'
+
+    if not fdhbfin_path.exists() or not fygfdpun_path.exists():
+        print("  WARNING: FDHBFIN.csv or FYGFDPUN.csv not found. Skipping Treasury processing.")
         return None
 
-    # Read both series
+    # Read foreign holdings (billions) and debt held by public (millions)
     foreign = pd.read_csv(fdhbfin_path, parse_dates=['date'], index_col='date')
-    total = pd.read_csv(gfdebtn_path, parse_dates=['date'], index_col='date')
+    public = pd.read_csv(fygfdpun_path, parse_dates=['date'], index_col='date')
 
     foreign.columns = ['foreign_billions']
-    total.columns = ['total_millions']
+    public.columns = ['public_millions']
 
-    # Convert to quarterly periods for alignment (raw dates may differ)
+    # Convert to quarterly periods for alignment
     foreign['period'] = foreign.index.to_period('Q')
-    total['period'] = total.index.to_period('Q')
+    public['period'] = public.index.to_period('Q')
 
-    # Merge on quarterly period
-    merged = foreign.merge(total, on='period', how='inner')
+    # Inner-join foreign + public debt
+    merged = foreign.merge(public, on='period', how='inner')
 
-    # Unit conversion: FDHBFIN is billions, GFDEBTN is millions
-    # Convert FDHBFIN to millions to match
-    merged['foreign_share'] = (merged['foreign_billions'] * 1000 / merged['total_millions']) * 100
+    # Compute foreign share: FDHBFIN is billions, FYGFDPUN is millions
+    merged['foreign_share'] = (merged['foreign_billions'] * 1000 / merged['public_millions']) * 100
 
-    # Sanity check: values should fall within 1-70%
+    # Sanity check foreign share
     out_of_bounds = (merged['foreign_share'] < 1) | (merged['foreign_share'] > 70)
     if out_of_bounds.any():
-        print(f"  WARNING: {out_of_bounds.sum()} treasury share values outside 1-70% range. Skipping.")
+        print(f"  WARNING: {out_of_bounds.sum()} foreign share values outside 1-70% range. Skipping.")
         return None
 
-    # Build output DataFrame with date index from period
     result = pd.DataFrame({
         'date': merged['period'].dt.to_timestamp(how='end'),
         'foreign_share': merged['foreign_share'].values,
     })
-    result = result.set_index('date').sort_index().dropna()
+    result = result.set_index('date').sort_index().dropna(subset=['foreign_share'])
 
     outpath = PROC_DIR / 'treasury_foreign_share.csv'
     result.to_csv(outpath)
-    print(f"  Treasuries: {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
+    print(f"  Treasuries (foreign): {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
     print(f"  Latest foreign share: {result['foreign_share'].iloc[-1]:.1f}%")
     return result
 
 
-def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None):
+def process_fed_holdings():
+    """Compute Fed share of publicly held US federal debt.
+
+    Fed share: FDHBFRBN (billions) × 1000 / FYGFDPUN (millions) × 100.
+    Output: treasury_fed_share.csv with columns: date, fed_share.
+    """
+    fdhbfrbn_path = RAW_DIR / 'FDHBFRBN.csv'
+    fygfdpun_path = RAW_DIR / 'FYGFDPUN.csv'
+
+    if not fdhbfrbn_path.exists() or not fygfdpun_path.exists():
+        print("  WARNING: FDHBFRBN.csv or FYGFDPUN.csv not found. Skipping Fed holdings processing.")
+        return None
+
+    fed = pd.read_csv(fdhbfrbn_path, parse_dates=['date'], index_col='date')
+    public = pd.read_csv(fygfdpun_path, parse_dates=['date'], index_col='date')
+
+    fed.columns = ['fed_billions']
+    public.columns = ['public_millions']
+
+    # Convert to quarterly periods for alignment
+    fed['period'] = fed.index.to_period('Q')
+    public['period'] = public.index.to_period('Q')
+
+    # Inner-join Fed + public debt (independent of foreign holdings)
+    merged = fed.merge(public, on='period', how='inner')
+
+    # Compute Fed share: FDHBFRBN is billions, FYGFDPUN is millions
+    merged['fed_share'] = (merged['fed_billions'] * 1000 / merged['public_millions']) * 100
+
+    # Sanity check
+    out_of_bounds = (merged['fed_share'] < 1) | (merged['fed_share'] > 50)
+    if out_of_bounds.any():
+        print(f"  WARNING: {out_of_bounds.sum()} fed_share values outside 1-50% range.")
+
+    result = pd.DataFrame({
+        'date': merged['period'].dt.to_timestamp(how='end'),
+        'fed_share': merged['fed_share'].values,
+    })
+    result = result.set_index('date').sort_index().dropna(subset=['fed_share'])
+
+    outpath = PROC_DIR / 'treasury_fed_share.csv'
+    result.to_csv(outpath)
+    print(f"  Treasuries (Fed): {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
+    print(f"  Latest Fed share: {result['fed_share'].iloc[-1]:.1f}%")
+    return result
+
+
+def process_current_account():
+    """Compute U.S. current account balance as percent of GDP.
+
+    Uses NETFI (current account, billions SAAR) / GDP (billions SAAR) × 100.
+    Output: current_account_gdp.csv with columns: date, ca_pct_gdp.
+    """
+    netfi_path = RAW_DIR / 'NETFI.csv'
+    gdp_path = RAW_DIR / 'GDP.csv'
+
+    if not netfi_path.exists() or not gdp_path.exists():
+        print("  WARNING: NETFI.csv or GDP.csv not found. Skipping current account processing.")
+        return None
+
+    netfi = pd.read_csv(netfi_path, parse_dates=['date'], index_col='date')
+    gdp = pd.read_csv(gdp_path, parse_dates=['date'], index_col='date')
+
+    netfi.columns = ['netfi']
+    gdp.columns = ['gdp']
+
+    # Align on quarterly periods
+    netfi['period'] = netfi.index.to_period('Q')
+    gdp['period'] = gdp.index.to_period('Q')
+
+    merged = netfi.merge(gdp, on='period', how='inner')
+    merged['ca_pct_gdp'] = (merged['netfi'] / merged['gdp']) * 100
+
+    # Sanity check: historical U.S. range roughly -8% to +5% (early post-war surpluses)
+    out_of_bounds = (merged['ca_pct_gdp'] < -8) | (merged['ca_pct_gdp'] > 5)
+    if out_of_bounds.any():
+        print(f"  WARNING: {out_of_bounds.sum()} current account values outside -8% to +3% range.")
+
+    result = pd.DataFrame({
+        'date': merged['period'].dt.to_timestamp(how='end'),
+        'ca_pct_gdp': merged['ca_pct_gdp'].values,
+    })
+    result = result.set_index('date').sort_index().dropna(subset=['ca_pct_gdp'])
+
+    outpath = PROC_DIR / 'current_account_gdp.csv'
+    result.to_csv(outpath)
+    print(f"  Current account: {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
+    print(f"  Latest CA/GDP: {result['ca_pct_gdp'].iloc[-1]:.1f}%")
+    return result
+
+
+def process_debt_to_gdp():
+    """Clean and output federal debt-to-GDP ratio.
+
+    Uses GFDEGDQ188S (already in percent).
+    Output: debt_to_gdp.csv with columns: date, debt_gdp.
+    """
+    path = RAW_DIR / 'GFDEGDQ188S.csv'
+    if not path.exists():
+        print("  WARNING: GFDEGDQ188S.csv not found. Skipping debt-to-GDP processing.")
+        return None
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    df.columns = ['debt_gdp']
+    df = df.sort_index().dropna(subset=['debt_gdp'])
+
+    # Sanity check: 20% to 200%
+    out_of_bounds = (df['debt_gdp'] < 20) | (df['debt_gdp'] > 200)
+    if out_of_bounds.any():
+        print(f"  WARNING: {out_of_bounds.sum()} debt-to-GDP values outside 20-200% range.")
+
+    outpath = PROC_DIR / 'debt_to_gdp.csv'
+    df.to_csv(outpath)
+    print(f"  Debt-to-GDP: {len(df)} quarters, {df.index[0].date()} to {df.index[-1].date()}")
+    print(f"  Latest debt/GDP: {df['debt_gdp'].iloc[-1]:.1f}%")
+    return df
+
+
+def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None,
+                   fed_holdings=None, current_account=None, debt_to_gdp=None):
     """Create metadata.json with last-observation dates."""
     metadata = {
         "last_updated": datetime.now().isoformat(timespec='seconds'),
@@ -222,13 +343,31 @@ def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None):
     if treasuries is not None and len(treasuries) > 0:
         metadata["sources"]["treasuries"] = {
             "last_obs": str(treasuries.index[-1].date()),
-            "source": "FRED FDHBFIN / GFDEBTN"
+            "source": "FRED FDHBFIN / FYGFDPUN"
+        }
+
+    if fed_holdings is not None and len(fed_holdings) > 0:
+        metadata["sources"]["fed_holdings"] = {
+            "last_obs": str(fed_holdings.index[-1].date()),
+            "source": "FRED FDHBFRBN / FYGFDPUN"
         }
 
     if dxy is not None and len(dxy) > 0:
         metadata["sources"]["dxy"] = {
             "last_obs": str(dxy.index[-1].date()),
             "source": "FRED DTWEXBGS"
+        }
+
+    if current_account is not None and len(current_account) > 0:
+        metadata["sources"]["current_account"] = {
+            "last_obs": str(current_account.index[-1].date()),
+            "source": "FRED NETFI / GDP"
+        }
+
+    if debt_to_gdp is not None and len(debt_to_gdp) > 0:
+        metadata["sources"]["debt_to_gdp"] = {
+            "last_obs": str(debt_to_gdp.index[-1].date()),
+            "source": "FRED GFDEGDQ188S"
         }
 
     outpath = PROC_DIR / 'metadata.json'
@@ -247,8 +386,12 @@ def process_all():
     fx = process_fx_turnover()
     debt = process_bis_debt()
     treasuries = process_treasuries()
+    fed_holdings = process_fed_holdings()
+    ca = process_current_account()
+    debt_gdp = process_debt_to_gdp()
 
-    build_metadata(cofer=cofer, dxy=dxy, debt=debt, fx=fx, treasuries=treasuries)
+    build_metadata(cofer=cofer, dxy=dxy, debt=debt, fx=fx, treasuries=treasuries,
+                   fed_holdings=fed_holdings, current_account=ca, debt_to_gdp=debt_gdp)
 
 
 if __name__ == '__main__':

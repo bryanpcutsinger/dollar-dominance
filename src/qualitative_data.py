@@ -103,19 +103,43 @@ Note: Only USD, EUR, and Other breakdown is available from the BIS bulk dataset
 at the aggregate level.</p>
 
 <p><strong>Foreign Holdings of Treasuries (FRED):</strong> Quarterly data from the
-U.S. Treasury via FRED. Foreign holdings (FDHBFIN, billions) divided by total public
-debt (GFDEBTN, millions) gives the share of U.S. federal debt held by foreign and
-international investors. Unlike the BIS debt securities measure (which tracks currency
+U.S. Treasury via FRED. Foreign holdings (FDHBFIN, billions) divided by Federal Debt
+Held by the Public (FYGFDPUN, millions) gives the share of publicly held federal debt
+held by foreign and international investors. Using "Debt Held by the Public" as the
+denominator &mdash; rather than Total Public Debt (which includes ~$7 trillion in
+intragovernmental holdings) &mdash; provides a more meaningful measure of the foreign
+share of marketable debt. Unlike the BIS debt securities measure (which tracks currency
 denomination of international bonds), this captures foreign demand for U.S. sovereign
 debt specifically &mdash; a proxy for confidence in dollar-denominated safe assets.
-FDHBFIN typically lags one quarter behind GFDEBTN. Available since 1970.</p>
+FDHBFIN typically lags one quarter behind FYGFDPUN. Available since 1970.</p>
+
+<p><strong>Federal Reserve Holdings of Treasuries (FRED):</strong> Quarterly data from FRED.
+Federal Debt Held by Federal Reserve Banks (FDHBFRBN, billions) divided by Federal
+Debt Held by the Public (FYGFDPUN, millions). The Fed's Treasury portfolio expanded
+dramatically during QE rounds (2009&ndash;2014, 2020&ndash;2022) and has been
+shrinking during quantitative tightening. Tracking the Fed share alongside the foreign
+share helps distinguish whether a declining foreign share reflects genuine
+diversification away from dollars or simply reflects growth of the Fed's balance sheet
+increasing the denominator's composition. Available since 1970.</p>
 
 <p><strong>Dollar Index (DTWEXBGS):</strong> Nominal Broad U.S. Dollar Index from
 the Federal Reserve, trade-weighted against a broad set of currencies.</p>
 
+<p><strong>Current Account Balance (% of GDP):</strong> U.S. current account
+balance from NIPA accounts (FRED series NETFI), expressed as a percentage of GDP.
+Quarterly, seasonally adjusted at annual rates. A persistent deficit reflects the
+U.S. role as supplier of the world&rsquo;s primary reserve asset &mdash; foreigners
+accumulate dollar claims by running surpluses against the U.S.</p>
+
+<p><strong>Federal Debt-to-GDP Ratio:</strong> Total public debt as a percentage
+of GDP (FRED series GFDEGDQ188S). Quarterly. Rising debt-to-GDP ratios test the
+fiscal capacity that underpins Treasury demand. Hendrickson (2025) argues the system
+becomes fragile when debt levels erode confidence in the government&rsquo;s ability
+to service obligations.</p>
+
 <div class="citation-block">
     <h4>How to Cite</h4>
-    <p>Cutsinger, Bryan, and Joshua Hendrickson. "Dollar Dominance Dashboard."
+    <p>Cutsinger, Bryan, and Joshua Hendrickson. "The Treasury Standard: Monitoring Dollar Dominance."
     American Institute for Economic Research, Sound Money Project.
     Available at <a href="https://bryanpcutsinger.github.io/dollar-dominance/" style="color:#0f5499;">bryanpcutsinger.github.io/dollar-dominance</a>.
     Accessed [date].</p>

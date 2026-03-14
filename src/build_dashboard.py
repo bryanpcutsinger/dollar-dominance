@@ -14,15 +14,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.build_charts import (
     build_chart_cofer,
+    build_chart_current_account,
     build_chart_debt_securities,
+    build_chart_debt_to_gdp,
     build_chart_dxy,
+    build_chart_fed_holdings,
     build_chart_fx_turnover,
     build_chart_treasuries,
 )
 from src.build_components import (
     build_cofer_takeaways,
+    build_current_account_takeaways,
     build_debt_takeaways,
+    build_debt_to_gdp_takeaways,
     build_dxy_takeaways,
+    build_fed_holdings_takeaways,
     build_fx_takeaways,
     build_hero_svg,
     build_key_takeaways,
@@ -53,7 +59,10 @@ def build_dashboard():
     chart_fx = build_chart_fx_turnover()
     chart_debt = build_chart_debt_securities()
     chart_treasuries = build_chart_treasuries(event_markers=False)
+    chart_fed = build_chart_fed_holdings(event_markers=False)
     chart_dxy = build_chart_dxy(event_markers=False)
+    chart_current_account = build_chart_current_account(event_markers=False)
+    chart_debt_to_gdp = build_chart_debt_to_gdp(event_markers=False)
 
     # Components
     print("  Building components...")
@@ -65,7 +74,10 @@ def build_dashboard():
     fx_takeaways = build_fx_takeaways()
     debt_takeaways = build_debt_takeaways()
     treasuries_takeaways = build_treasuries_takeaways()
+    fed_takeaways = build_fed_holdings_takeaways()
     dxy_takeaways = build_dxy_takeaways()
+    ca_takeaways = build_current_account_takeaways()
+    dtg_takeaways = build_debt_to_gdp_takeaways()
     # Qualitative / editorial
     print("  Building qualitative sections...")
     methodology = methodology_html()
@@ -76,7 +88,7 @@ def build_dashboard():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dollar Dominance Dashboard</title>
+    <title>The Treasury Standard: Monitoring Dollar Dominance</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='56' font-weight='900' fill='%232e7d32' font-family='Arial,sans-serif'>$</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -254,7 +266,9 @@ def build_dashboard():
         .badge-trade {{ background: #fef3e0; color: #b07800; }}
         .badge-finance {{ background: #f0ebf5; color: #5b3e8a; }}
         .badge-demand {{ background: #e5f2f0; color: #0a6a5a; }}
+        .badge-fed {{ background: #f0ebf8; color: #6b4e8a; }}
         .badge-index {{ background: #eaf2e5; color: #3a6e1e; }}
+        .badge-structural {{ background: #fef2f2; color: #991b1b; }}
 
         .metric-cards-grid {{
             display: grid;
@@ -602,12 +616,47 @@ def build_dashboard():
 
         <div class="two-col-layout">
             <div class="two-col-left">
+                <div class="chart-container" aria-label="Federal Reserve Treasury holdings line chart">
+                    {chart_fed}
+                </div>
+            </div>
+            <div class="two-col-right">
+                {fed_takeaways}
+            </div>
+        </div>
+
+        <div class="two-col-layout">
+            <div class="two-col-left">
                 <div class="chart-container" aria-label="Dollar index line chart">
                     {chart_dxy}
                 </div>
             </div>
             <div class="two-col-right">
                 {dxy_takeaways}
+            </div>
+        </div>
+
+        <div class="section-header">Structural Foundations</div>
+
+        <div class="two-col-layout">
+            <div class="two-col-left">
+                <div class="chart-container" aria-label="Current account balance chart">
+                    {chart_current_account}
+                </div>
+            </div>
+            <div class="two-col-right">
+                {ca_takeaways}
+            </div>
+        </div>
+
+        <div class="two-col-layout">
+            <div class="two-col-left">
+                <div class="chart-container" aria-label="Debt-to-GDP ratio chart">
+                    {chart_debt_to_gdp}
+                </div>
+            </div>
+            <div class="two-col-right">
+                {dtg_takeaways}
             </div>
         </div>
 
@@ -623,9 +672,9 @@ def build_dashboard():
     </div>
 
     <footer class="dashboard-footer">
-        <p class="footer-title">Dollar Dominance Dashboard</p>
+        <p class="footer-title">The Treasury Standard: Monitoring Dollar Dominance</p>
         <p class="footer-meta">Data last updated: {last_updated} &bull; Built with Python, Plotly, and public data from the IMF, BIS, and FRED</p>
-        <p class="footer-citation">Cutsinger, Bryan, and Joshua Hendrickson. "Dollar Dominance Dashboard." American Institute for Economic Research, Sound Money Project. <a href="https://bryanpcutsinger.github.io/dollar-dominance/" style="color:#0f5499;">bryanpcutsinger.github.io/dollar-dominance</a>.</p>
+        <p class="footer-citation">Cutsinger, Bryan, and Joshua Hendrickson. "The Treasury Standard: Monitoring Dollar Dominance." American Institute for Economic Research, Sound Money Project. <a href="https://bryanpcutsinger.github.io/dollar-dominance/" style="color:#0f5499;">bryanpcutsinger.github.io/dollar-dominance</a>.</p>
     </footer>
 
     <script>

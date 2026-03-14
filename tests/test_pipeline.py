@@ -16,7 +16,7 @@ class TestNoFetchMode:
         """After processing, expected output files should exist."""
         proc_dir = Path('data/processed')
         # These should exist after any successful run
-        expected = ['cofer_shares.csv', 'fx_turnover_triennial.csv', 'treasury_foreign_share.csv', 'metadata.json']
+        expected = ['cofer_shares.csv', 'fx_turnover_triennial.csv', 'treasury_foreign_share.csv', 'treasury_fed_share.csv', 'current_account_gdp.csv', 'debt_to_gdp.csv', 'metadata.json']
         for f in expected:
             path = proc_dir / f
             assert path.exists(), f"Expected {path} to exist"
@@ -49,7 +49,7 @@ class TestNoFetchMode:
             html = f.read()
 
         assert 'plotly' in html.lower()
-        assert 'Dollar Dominance Dashboard' in html
+        assert 'The Treasury Standard' in html
 
     def test_dashboard_under_10mb(self):
         """Dashboard HTML should be under 10MB."""
