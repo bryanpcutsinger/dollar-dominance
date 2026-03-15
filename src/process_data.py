@@ -314,8 +314,89 @@ def process_debt_to_gdp():
     return df
 
 
+def process_deficit_gdp():
+    """Clean and output federal surplus/deficit as percent of GDP.
+
+    Uses FYFSGDA188S (already in percent, negative = deficit).
+    Output: deficit_gdp.csv with columns: date, deficit_gdp.
+    """
+    path = RAW_DIR / 'FYFSGDA188S.csv'
+    if not path.exists():
+        print("  WARNING: FYFSGDA188S.csv not found. Skipping deficit/GDP processing.")
+        return None
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    df.columns = ['deficit_gdp']
+    df = df.sort_index().dropna(subset=['deficit_gdp'])
+
+    # Sanity check: -40% to +10%
+    out_of_bounds = (df['deficit_gdp'] < -40) | (df['deficit_gdp'] > 10)
+    if out_of_bounds.any():
+        print(f"  WARNING: {out_of_bounds.sum()} deficit/GDP values outside -40% to +10% range.")
+
+    outpath = PROC_DIR / 'deficit_gdp.csv'
+    df.to_csv(outpath)
+    print(f"  Deficit/GDP: {len(df)} annual observations, {df.index[0].date()} to {df.index[-1].date()}")
+    print(f"  Latest deficit/GDP: {df['deficit_gdp'].iloc[-1]:.1f}%")
+    return df
+
+
+def process_r_minus_g():
+    """Compute r − g: 10-year Treasury yield minus nominal GDP growth.
+
+    r: DGS10 (10-year Treasury yield, daily → quarterly average)
+    g: nominal GDP growth rate (annualized % change from GDP series)
+    Output: r_minus_g.csv with columns: date, r_minus_g, yield_10y, ngdp_growth.
+    """
+    dgs10_path = RAW_DIR / 'DGS10.csv'
+    gdp_path = RAW_DIR / 'GDP.csv'
+
+    if not dgs10_path.exists() or not gdp_path.exists():
+        print("  WARNING: DGS10.csv or GDP.csv not found. Skipping r−g processing.")
+        return None
+
+    # 10-year yield: daily → quarterly average
+    yields = pd.read_csv(dgs10_path, parse_dates=['date'], index_col='date')
+    yields.columns = ['yield_10y']
+    yields['period'] = yields.index.to_period('Q')
+    quarterly_yield = yields.groupby('period')['yield_10y'].mean()
+
+    # Nominal GDP growth: annualized % change (quarter-over-quarter × 4)
+    gdp = pd.read_csv(gdp_path, parse_dates=['date'], index_col='date')
+    gdp.columns = ['gdp']
+    gdp['period'] = gdp.index.to_period('Q')
+    gdp_q = gdp.groupby('period')['gdp'].last()
+    # Year-over-year growth rate (avoids seasonality issues with QoQ annualization)
+    ngdp_growth = gdp_q.pct_change(periods=4) * 100
+
+    # Align on quarterly periods
+    combined = pd.DataFrame({
+        'yield_10y': quarterly_yield,
+        'ngdp_growth': ngdp_growth,
+    }).dropna()
+
+    combined['r_minus_g'] = combined['yield_10y'] - combined['ngdp_growth']
+
+    # Convert period index to timestamp
+    result = combined.copy()
+    result.index = result.index.to_timestamp(how='end')
+    result.index.name = 'date'
+
+    # Sanity check: -30 to +20 range
+    out_of_bounds = (result['r_minus_g'] < -30) | (result['r_minus_g'] > 20)
+    if out_of_bounds.any():
+        print(f"  WARNING: {out_of_bounds.sum()} r−g values outside -30 to +20 range.")
+
+    outpath = PROC_DIR / 'r_minus_g.csv'
+    result.to_csv(outpath)
+    print(f"  r−g: {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
+    print(f"  Latest r−g: {result['r_minus_g'].iloc[-1]:.1f} pp")
+    return result
+
+
 def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None,
-                   fed_holdings=None, current_account=None, debt_to_gdp=None):
+                   fed_holdings=None, current_account=None, debt_to_gdp=None,
+                   deficit_gdp=None, r_minus_g=None):
     """Create metadata.json with last-observation dates."""
     metadata = {
         "last_updated": datetime.now().isoformat(timespec='seconds'),
@@ -370,6 +451,18 @@ def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None,
             "source": "FRED GFDEGDQ188S"
         }
 
+    if deficit_gdp is not None and len(deficit_gdp) > 0:
+        metadata["sources"]["deficit_gdp"] = {
+            "last_obs": str(deficit_gdp.index[-1].date()),
+            "source": "FRED FYFSGDA188S"
+        }
+
+    if r_minus_g is not None and len(r_minus_g) > 0:
+        metadata["sources"]["r_minus_g"] = {
+            "last_obs": str(r_minus_g.index[-1].date()),
+            "source": "FRED DGS10 / GDP (computed)"
+        }
+
     outpath = PROC_DIR / 'metadata.json'
     with open(outpath, 'w') as f:
         json.dump(metadata, f, indent=2)
@@ -389,9 +482,12 @@ def process_all():
     fed_holdings = process_fed_holdings()
     ca = process_current_account()
     debt_gdp = process_debt_to_gdp()
+    deficit = process_deficit_gdp()
+    r_g = process_r_minus_g()
 
     build_metadata(cofer=cofer, dxy=dxy, debt=debt, fx=fx, treasuries=treasuries,
-                   fed_holdings=fed_holdings, current_account=ca, debt_to_gdp=debt_gdp)
+                   fed_holdings=fed_holdings, current_account=ca, debt_to_gdp=debt_gdp,
+                   deficit_gdp=deficit, r_minus_g=r_g)
 
 
 if __name__ == '__main__':

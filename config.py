@@ -34,6 +34,8 @@ FRED_SERIES = {
     'NETFI': 'Balance on Current Account, NIPAs',
     'GDP': 'Gross Domestic Product',
     'GFDEGDQ188S': 'Federal Debt: Total Public Debt as Percent of GDP',
+    'FYFSGDA188S': 'Federal Surplus or Deficit as Percent of GDP',
+    'DGS10': 'Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity',
 }
 
 # IMF COFER — primary source is IMF SDMX API, DBnomics as fallback
@@ -60,6 +62,8 @@ COLORS = {
     'DomesticPrivate': '#b0b0b0',  # Gray (domestic private)
     'CurrentAccount': '#2563eb',    # Blue (current account)
     'DebtGDP': '#dc2626',           # Red (debt-to-GDP)
+    'Deficit': '#d97706',           # Amber (deficit/GDP)
+    'RminusG': '#7c3aed',          # Violet (r minus g)
 }
 
 # Event markers for time series charts

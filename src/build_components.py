@@ -237,7 +237,54 @@ def build_metric_cards():
             <div class="card-date">{dtg_quarter} &middot; FRED</div>
         </div>""")
 
-    # Card 8: Dollar Index (DXY)
+    # Card 8: Federal Deficit/GDP
+    def_path = PROC_DIR / 'deficit_gdp.csv'
+    if def_path.exists():
+        df_def = pd.read_csv(def_path, parse_dates=['date'], index_col='date')
+        deficit = df_def['deficit_gdp'].dropna()
+        if len(deficit) > 0:
+            def_val = deficit.iloc[-1]
+            def_date = deficit.index[-1]
+            def_year = str(def_date.year)
+            if len(deficit) > 1:
+                def_delta = def_val - deficit.iloc[-2]
+                def_delta_str = _delta_html(def_delta, horizon="YoY")
+            else:
+                def_delta_str = ""
+            cards.append(f"""
+        <div class="metric-card" style="border-left-color: #d97706;">
+            <div class="category-badge badge-structural">STRUCTURAL</div>
+            <div class="card-label">Federal Deficit (% of GDP)</div>
+            <div class="card-value">{def_val:.1f}%</div>
+            <div class="card-delta">{def_delta_str}</div>
+            <div class="card-date">{def_year} &middot; FRED</div>
+        </div>""")
+
+    # Card 9: r − g
+    rg_path = PROC_DIR / 'r_minus_g.csv'
+    if rg_path.exists():
+        df_rg = pd.read_csv(rg_path, parse_dates=['date'], index_col='date')
+        rg = df_rg['r_minus_g'].dropna()
+        if len(rg) > 0:
+            rg_val = rg.iloc[-1]
+            rg_date = rg.index[-1]
+            rg_quarter = f"{rg_date.year}-Q{(rg_date.month - 1) // 3 + 1}"
+            if len(rg) > 4:
+                rg_delta = rg_val - rg.iloc[-5]
+                rg_delta_str = _delta_html(rg_delta)
+            else:
+                rg_delta_str = ""
+            sign_label = "r > g" if rg_val > 0 else "r < g"
+            cards.append(f"""
+        <div class="metric-card" style="border-left-color: #7c3aed;">
+            <div class="category-badge badge-structural">STRUCTURAL</div>
+            <div class="card-label">r − g ({sign_label})</div>
+            <div class="card-value">{rg_val:.1f} pp</div>
+            <div class="card-delta">{rg_delta_str}</div>
+            <div class="card-date">{rg_quarter} &middot; FRED</div>
+        </div>""")
+
+    # Card 10: Dollar Index (DXY)
     dxy_path = PROC_DIR / 'dxy_weekly.csv'
     if dxy_path.exists():
         df = pd.read_csv(dxy_path, parse_dates=['date'], index_col='date')
@@ -712,6 +759,88 @@ def build_debt_to_gdp_takeaways():
             <li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>
             <li>The average debt-to-GDP ratio rose from {pre_2008:.0f}% (pre-2008) to {post_2008:.0f}% (post-2008), accelerating after the GFC and COVID.</li>
             <li>Source: FRED series GFDEGDQ188S.</li>
+        </ul>
+    </div>"""
+
+
+def build_deficit_takeaways():
+    """Return a takeaway panel for the deficit/GDP chart."""
+    path = PROC_DIR / 'deficit_gdp.csv'
+    if not path.exists():
+        return ""
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    deficit = df['deficit_gdp'].dropna()
+    if len(deficit) < 2:
+        return ""
+
+    latest_val = deficit.iloc[-1]
+    latest_date = deficit.index[-1]
+    year_str = str(latest_date.year)
+
+    # YoY change
+    prior_val = deficit.iloc[-2]
+    delta = latest_val - prior_val
+    direction = "up" if delta > 0 else "down"
+
+    # Count deficit years
+    total_years = len(deficit)
+    deficit_years = (deficit < 0).sum()
+    deficit_pct = deficit_years / total_years * 100
+
+    # Post-2000 average
+    post_2000 = deficit[deficit.index >= '2000-01-01']
+    avg_post_2000 = post_2000.mean() if len(post_2000) > 0 else 0
+
+    return f"""
+    <div class="key-takeaways">
+        <h3>Federal Deficit</h3>
+        <ul>
+            <li>The federal surplus/deficit was {latest_val:.1f}% of GDP in {year_str}.</li>
+            <li>That is {direction} {abs(delta):.1f} pp from the prior year.</li>
+            <li>The U.S. has run a deficit in {deficit_pct:.0f}% of years in this dataset. The post-2000 average is {avg_post_2000:.1f}%.</li>
+            <li>Source: FRED series FYFSGDA188S.</li>
+        </ul>
+    </div>"""
+
+
+def build_r_minus_g_takeaways():
+    """Return a takeaway panel for the r − g chart."""
+    path = PROC_DIR / 'r_minus_g.csv'
+    if not path.exists():
+        return ""
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+    rg = df['r_minus_g'].dropna()
+    if len(rg) < 5:
+        return ""
+
+    latest_val = rg.iloc[-1]
+    latest_date = rg.index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    # YoY change
+    comp_val = rg.iloc[-5]
+    delta = latest_val - comp_val
+    direction = "up" if delta > 0 else "down"
+
+    # Share of quarters with r > g
+    r_gt_g_pct = (rg > 0).mean() * 100
+
+    # Interpretation
+    if latest_val > 0:
+        regime = "r exceeds g, meaning debt dynamics put upward pressure on the debt-to-GDP ratio absent primary surpluses"
+    else:
+        regime = "g exceeds r, meaning the economy can grow its way out of debt even with moderate primary deficits"
+
+    return f"""
+    <div class="key-takeaways">
+        <h3>r &minus; g</h3>
+        <ul>
+            <li>r &minus; g stood at {latest_val:.1f} pp as of {quarter} &mdash; {regime}.</li>
+            <li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>
+            <li>Historically, r has exceeded g in {r_gt_g_pct:.0f}% of quarters in this dataset.</li>
+            <li>Source: FRED DGS10 (10-year yield) minus nominal GDP growth (FRED GDP).</li>
         </ul>
     </div>"""
 

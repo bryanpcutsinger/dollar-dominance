@@ -137,6 +137,23 @@ fiscal capacity that underpins Treasury demand. Hendrickson (2025) argues the sy
 becomes fragile when debt levels erode confidence in the government&rsquo;s ability
 to service obligations.</p>
 
+<p><strong>Federal Surplus/Deficit (% of GDP):</strong> Annual federal surplus or
+deficit as a percentage of GDP (FRED series FYFSGDA188S). While debt-to-GDP captures
+the stock of obligations, the deficit captures the flow &mdash; tracking the rate at
+which debt is accumulating. Jiang, Lustig, Van Nieuwerburgh, and Xiaolan (2026) identify
+the primary fiscal surplus as a key state variable for bond safety regimes. Persistent
+deficits signal deteriorating fiscal fundamentals that can erode safe-asset status
+over time.</p>
+
+<p><strong>r &minus; g (Interest Rate vs. Growth Rate):</strong> The 10-year Treasury
+yield (FRED DGS10, quarterly average) minus the year-over-year nominal GDP growth rate
+(computed from FRED GDP). This spread is the central variable in debt sustainability
+analysis: when r &gt; g persistently, the debt-to-GDP ratio rises even without new
+borrowing, requiring ever-larger primary surpluses to stabilize. Jiang et al. (2026)
+show that r &minus; g drops sharply during wars (enabling debt reduction through financial
+repression) but that peacetime reversals can be abrupt. A sustained r &gt; g regime
+threatens the fiscal capacity that underpins dollar safe-asset status.</p>
+
 <div class="citation-block">
     <h4>How to Cite</h4>
     <p>Cutsinger, Bryan, and Joshua Hendrickson. "The Treasury Standard: Monitoring Dollar Dominance."

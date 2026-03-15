@@ -17,9 +17,11 @@ from src.build_charts import (
     build_chart_current_account,
     build_chart_debt_securities,
     build_chart_debt_to_gdp,
+    build_chart_deficit,
     build_chart_dxy,
     build_chart_fed_holdings,
     build_chart_fx_turnover,
+    build_chart_r_minus_g,
     build_chart_treasuries,
 )
 from src.build_components import (
@@ -27,12 +29,14 @@ from src.build_components import (
     build_current_account_takeaways,
     build_debt_takeaways,
     build_debt_to_gdp_takeaways,
+    build_deficit_takeaways,
     build_dxy_takeaways,
     build_fed_holdings_takeaways,
     build_fx_takeaways,
     build_hero_svg,
     build_key_takeaways,
     build_metric_cards,
+    build_r_minus_g_takeaways,
     build_sticky_header,
     build_treasuries_takeaways,
 )
@@ -63,6 +67,8 @@ def build_dashboard():
     chart_dxy = build_chart_dxy(event_markers=False)
     chart_current_account = build_chart_current_account(event_markers=False)
     chart_debt_to_gdp = build_chart_debt_to_gdp(event_markers=False)
+    chart_deficit = build_chart_deficit(event_markers=False)
+    chart_r_minus_g = build_chart_r_minus_g(event_markers=False)
 
     # Components
     print("  Building components...")
@@ -78,6 +84,8 @@ def build_dashboard():
     dxy_takeaways = build_dxy_takeaways()
     ca_takeaways = build_current_account_takeaways()
     dtg_takeaways = build_debt_to_gdp_takeaways()
+    deficit_takeaways = build_deficit_takeaways()
+    rg_takeaways = build_r_minus_g_takeaways()
     # Qualitative / editorial
     print("  Building qualitative sections...")
     methodology = methodology_html()
@@ -657,6 +665,28 @@ def build_dashboard():
             </div>
             <div class="two-col-right">
                 {dtg_takeaways}
+            </div>
+        </div>
+
+        <div class="two-col-layout">
+            <div class="two-col-left">
+                <div class="chart-container" aria-label="Federal deficit as percent of GDP chart">
+                    {chart_deficit}
+                </div>
+            </div>
+            <div class="two-col-right">
+                {deficit_takeaways}
+            </div>
+        </div>
+
+        <div class="two-col-layout">
+            <div class="two-col-left">
+                <div class="chart-container" aria-label="r minus g interest rate vs growth rate chart">
+                    {chart_r_minus_g}
+                </div>
+            </div>
+            <div class="two-col-right">
+                {rg_takeaways}
             </div>
         </div>
 

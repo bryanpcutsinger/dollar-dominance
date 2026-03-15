@@ -388,6 +388,98 @@ def build_chart_debt_to_gdp(event_markers=True):
     return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
 
 
+def build_chart_deficit(event_markers=True):
+    """Chart: U.S. federal deficit as percent of GDP."""
+    path = PROC_DIR / 'deficit_gdp.csv'
+    if not path.exists():
+        return _placeholder("Deficit/GDP data unavailable.")
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df['deficit_gdp'],
+        name='Federal Surplus/Deficit (% of GDP)',
+        line=dict(color=COLORS['Deficit'], width=2),
+    ))
+
+    # Zero reference line
+    fig.add_hline(y=0, line_dash="dot", line_color="#d4d2ce")
+
+    if event_markers:
+        _add_event_markers(fig)
+
+    # Latest-value annotation
+    latest_val = df['deficit_gdp'].dropna().iloc[-1]
+    latest_date = df['deficit_gdp'].dropna().index[-1]
+    year_str = str(latest_date.year)
+
+    fig.add_annotation(
+        x=latest_date, y=latest_val,
+        text=f"<b>{latest_val:.1f}%</b><br>({year_str})",
+        showarrow=True, arrowhead=2, ax=-60, ay=-30,
+        font=dict(size=12, color=COLORS['Deficit']),
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['Deficit'], borderwidth=0.5,
+    )
+
+    fig.update_layout(
+        **LAYOUT_DEFAULTS,
+        title="U.S. Federal Surplus/Deficit (% of GDP)",
+        yaxis=dict(title="Surplus/Deficit (% of GDP)"),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
+
+
+def build_chart_r_minus_g(event_markers=True):
+    """Chart: r − g (10-year yield minus nominal GDP growth)."""
+    path = PROC_DIR / 'r_minus_g.csv'
+    if not path.exists():
+        return _placeholder("r − g data unavailable.")
+
+    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df['r_minus_g'],
+        name='r − g (10Y yield − nominal GDP growth)',
+        line=dict(color=COLORS['RminusG'], width=2),
+    ))
+
+    # Zero reference line — r = g boundary
+    fig.add_hline(y=0, line_dash="dot", line_color="#d4d2ce")
+
+    if event_markers:
+        _add_event_markers(fig)
+
+    # Latest-value annotation
+    latest_val = df['r_minus_g'].dropna().iloc[-1]
+    latest_date = df['r_minus_g'].dropna().index[-1]
+    quarter = f"{latest_date.year}-Q{(latest_date.month - 1) // 3 + 1}"
+
+    fig.add_annotation(
+        x=latest_date, y=latest_val,
+        text=f"<b>{latest_val:.1f} pp</b><br>({quarter})",
+        showarrow=True, arrowhead=2, ax=-60, ay=-30,
+        font=dict(size=12, color=COLORS['RminusG']),
+        bgcolor="rgba(255,255,255,0.9)", bordercolor=COLORS['RminusG'], borderwidth=0.5,
+    )
+
+    fig.update_layout(
+        **LAYOUT_DEFAULTS,
+        title="r − g: Interest Rate vs. Growth Rate",
+        yaxis=dict(title="r − g (percentage points)"),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
+                    font=dict(size=11), bgcolor='rgba(0,0,0,0)'),
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False, config=PLOTLY_CONFIG)
+
+
 def build_chart_dxy(event_markers=True):
     """Standalone DXY line chart for the Trends tab."""
     path = PROC_DIR / 'dxy_weekly.csv'
