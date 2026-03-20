@@ -1,7 +1,7 @@
 """
 Fetch FRED series data via fredapi.
 
-Fetches: WMTSECL1, WSEFINTL1, SWPT, DTWEXBGS
+Fetches all FRED series defined in config.FRED_SERIES.
 Saves raw CSVs to data/raw/{series_id}.csv
 """
 

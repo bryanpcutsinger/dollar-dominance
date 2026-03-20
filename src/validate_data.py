@@ -410,13 +410,16 @@ def validate_metadata(result):
         meta = json.load(f)
 
     # Check timestamp is recent (within 24 hours if pipeline just ran)
-    if 'generated_at' in meta:
-        gen_time = datetime.fromisoformat(meta['generated_at'])
-        hours_ago = (datetime.now() - gen_time).total_seconds() / 3600
-        if hours_ago < 24:
-            result.passed('Metadata', f'Generated {hours_ago:.1f} hours ago')
-        else:
-            result.warn('Metadata', f'Generated {hours_ago:.1f} hours ago (>24h)')
+    try:
+        if 'last_updated' in meta:
+            gen_time = datetime.fromisoformat(meta['last_updated'])
+            hours_ago = (datetime.now() - gen_time).total_seconds() / 3600
+            if hours_ago < 24:
+                result.passed('Metadata', f'Generated {hours_ago:.1f} hours ago')
+            else:
+                result.warn('Metadata', f'Generated {hours_ago:.1f} hours ago (>24h)')
+    except Exception as e:
+        result.warn('Metadata', f'Timestamp check failed ({e})')
 
     # Check all expected processed files exist
     expected_files = [
