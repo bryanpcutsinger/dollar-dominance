@@ -46,7 +46,7 @@ jobs:
       - name: Run pipeline
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-        run: python3 run_pipeline.py
+        run: python3 run_pipeline.py --validate --fix
 
       - name: Commit and push if changed
         run: |
