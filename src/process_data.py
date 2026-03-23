@@ -80,7 +80,7 @@ def process_fx_turnover():
 
 
 def process_bis_debt():
-    """Process BIS bulk CSV into currency denomination shares."""
+    """Process BIS SDMX API data into currency denomination shares."""
     path = RAW_DIR / 'bis_debt_raw.csv'
     if not path.exists():
         print("  WARNING: bis_debt_raw.csv not found. Skipping BIS debt securities.")
@@ -89,48 +89,25 @@ def process_bis_debt():
     print("  Processing BIS debt securities...")
     df = pd.read_csv(path, low_memory=False)
 
-    # Filter: All countries excluding residents, all nationalities,
-    # all issuers (immediate + ultimate), total maturities, all rates,
-    # amounts outstanding, all currency groups
-    mask = (
-        (df['ISSUER_RES'] == '3P') &
-        (df['ISSUER_NAT'] == '3P') &
-        (df['ISSUER_BUS_IMM'] == '1') &
-        (df['ISSUER_BUS_ULT'] == '1') &
-        (df['ISSUE_OR_MAT'] == 'K') &
-        (df['ISSUE_RE_MAT'] == 'A') &
-        (df['ISSUE_RATE'] == 'A') &
-        (df['MEASURE'] == 'C') &
-        (df['ISSUE_CUR_GROUP'] == 'A')
+    # API returns long-format: each row is one observation with
+    # ISSUE_CUR (TO1/USD/EU1), TIME_PERIOD (e.g. "2020-Q1"), OBS_VALUE
+    pivot = df.pivot_table(
+        index='TIME_PERIOD', columns='ISSUE_CUR',
+        values='OBS_VALUE', aggfunc='first'
     )
-    filtered = df[mask]
 
-    # Get time columns (quarterly dates like "2020-Q1")
-    time_cols = [c for c in df.columns if c.startswith('19') or c.startswith('20')]
-
-    # Extract rows for TO1 (total), USD, EU1 (Euro zone)
-    currency_data = {}
-    for cur in ['TO1', 'USD', 'EU1']:
-        cur_rows = filtered[filtered['ISSUE_CUR'] == cur]
-        if len(cur_rows) == 1:
-            vals = cur_rows[time_cols].iloc[0].astype(float)
-            currency_data[cur] = vals
-        else:
-            print(f"  WARNING: Expected 1 row for {cur}, got {len(cur_rows)}")
-
-    if 'TO1' not in currency_data or 'USD' not in currency_data:
+    if 'TO1' not in pivot.columns or 'USD' not in pivot.columns:
         print("  ERROR: Missing TO1 or USD data. Cannot compute shares.")
         return None
 
-    # Build shares DataFrame
-    total = currency_data['TO1']
-    shares = pd.DataFrame(index=total.index)
-    shares['usd'] = (currency_data.get('USD', 0) / total * 100)
-    shares['eur'] = (currency_data.get('EU1', 0) / total * 100)
+    # Compute shares
+    shares = pd.DataFrame(index=pivot.index)
+    shares['usd'] = (pivot['USD'] / pivot['TO1'] * 100)
+    shares['eur'] = (pivot.get('EU1', 0) / pivot['TO1'] * 100)
     shares['other'] = 100.0 - shares['usd'] - shares['eur']
 
     # Drop rows where total is 0 or NaN
-    shares = shares[total > 0].dropna()
+    shares = shares[pivot['TO1'] > 0].dropna()
 
     # Convert index to proper quarterly dates
     shares.index = pd.PeriodIndex(shares.index, freq='Q').to_timestamp(how='end')

@@ -43,8 +43,8 @@ IMF_SDMX_BASE = "https://api.imf.org/external/sdmx/2.1"
 DBNOMICS_BASE = "https://api.db.nomics.world/v22"
 COFER_DATASET = "IMF/COFER"
 
-# BIS — bulk CSV download only (SDMX API not publicly available)
-BIS_BULK_DEBT_URL = "https://data.bis.org/static/bulk/WS_DEBT_SEC2_PUB_csv_col.zip"
+# BIS — SDMX REST API (public, no key required)
+# API URL is defined in src/fetch_bis.py
 
 # Chart color palette
 COLORS = {

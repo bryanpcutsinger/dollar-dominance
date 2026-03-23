@@ -31,7 +31,7 @@ open output/index.html
 |--------|--------|-----------|
 | FRED (DXY, FDHBFIN, GFDEBTN) | `fredapi` | Daily → weekly (DXY), Quarterly (Treasuries) |
 | IMF COFER | SDMX API (DBnomics fallback) | Quarterly |
-| BIS Debt Securities | Bulk CSV download | Quarterly |
+| BIS Debt Securities | SDMX REST API | Quarterly |
 | BIS FX Turnover | Hard-coded | Every 3 years |
 
 ## Dashboard Structure
@@ -54,6 +54,6 @@ GitHub Pages serves from `main/docs`. The pipeline copies `output/index.html` �
 ## Key Decisions
 
 - IMF legacy API (`dataservices.imf.org`) retired Nov 2025 — using IMF SDMX API as primary, DBnomics as fallback
-- BIS SDMX API not publicly accessible — using bulk CSV download
+- BIS SDMX REST API is now public (no API key required) — used for debt securities
 - BIS debt data only has USD/EUR/Other breakdown at aggregate level
 - COFER 2025Q3 methodology change marked on charts (unallocated category eliminated)
