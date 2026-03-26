@@ -231,7 +231,7 @@ def build_metric_cards():
             cards.append(f"""
         <div class="metric-card" style="border-left-color: #dc2626;">
             <div class="category-badge badge-structural">STRUCTURAL</div>
-            <div class="card-label">Federal Debt-to-GDP</div>
+            <div class="card-label">Publicly Held Debt-to-GDP</div>
             <div class="card-value">{dtg_val:.1f}%</div>
             <div class="card-delta">{dtg_delta_str}</div>
             <div class="card-date">{dtg_quarter} &middot; FRED</div>
@@ -753,12 +753,12 @@ def build_debt_to_gdp_takeaways():
 
     return f"""
     <div class="key-takeaways">
-        <h3>Debt-to-GDP</h3>
+        <h3>Publicly Held Debt-to-GDP</h3>
         <ul>
-            <li>U.S. federal debt stood at {latest_val:.1f}% of GDP as of {quarter}.</li>
+            <li>U.S. publicly held federal debt stood at {latest_val:.1f}% of GDP as of {quarter}.</li>
             <li>That is {direction} {abs(delta):.1f} pp from a year ago.</li>
-            <li>The average debt-to-GDP ratio rose from {pre_2008:.0f}% (pre-2008) to {post_2008:.0f}% (post-2008), accelerating after the GFC and COVID.</li>
-            <li>Source: FRED series GFDEGDQ188S.</li>
+            <li>The average publicly held debt-to-GDP ratio rose from {pre_2008:.0f}% (pre-2008) to {post_2008:.0f}% (post-2008), accelerating after the GFC and COVID.</li>
+            <li>Source: FRED series FYGFDPUN / GDP.</li>
         </ul>
     </div>"""
 

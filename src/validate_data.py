@@ -41,7 +41,8 @@ STALENESS_THRESHOLDS = {
     'FDHBFRBN': 180,
     'NETFI': 180,
     'GDP': 180,
-    'GFDEGDQ188S': 180,
+
+
     'FYFSGDA188S': 400, # Annual, allow >1 year lag
     'cofer': 270,       # Quarterly, often delayed
     'bis_debt': 270,    # Quarterly, often delayed
@@ -300,6 +301,29 @@ def validate_processed(result):
                     result.needs_fix('process')
     except Exception as e:
         result.warn('Processed', f'Current account/GDP check failed ({e})')
+
+    # --- Debt-to-GDP re-derivation ---
+    try:
+        fygfdpun = pd.read_csv(RAW_DIR / 'FYGFDPUN.csv', parse_dates=['date'])
+        gdp = pd.read_csv(RAW_DIR / 'GDP.csv', parse_dates=['date'])
+        proc_dtg = pd.read_csv(PROC_DIR / 'debt_to_gdp.csv', parse_dates=['date'])
+
+        if not fygfdpun.empty and not gdp.empty and not proc_dtg.empty:
+            merged = fygfdpun.merge(gdp, on='date', suffixes=('_debt', '_gdp'))
+            if not merged.empty:
+                last = merged.iloc[-1]
+                rederived = (last['value_debt'] / 1000) / last['value_gdp'] * 100
+
+                proc_last = proc_dtg.iloc[-1]['debt_gdp']
+                if abs(rederived - proc_last) < 0.5:
+                    result.passed('Processed', f'Debt-to-GDP verified '
+                                  f'({proc_last:.2f}% vs re-derived {rederived:.2f}%)')
+                else:
+                    result.failed('Processed', f'Debt-to-GDP mismatch — '
+                                  f'processed: {proc_last:.2f}%, re-derived: {rederived:.2f}%')
+                    result.needs_fix('process')
+    except Exception as e:
+        result.warn('Processed', f'Debt-to-GDP check failed ({e})')
 
     # --- Debt securities shares sum to ~100% ---
     try:

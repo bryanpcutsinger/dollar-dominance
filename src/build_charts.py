@@ -356,7 +356,7 @@ def build_chart_debt_to_gdp(event_markers=True):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=df.index, y=df['debt_gdp'],
-        name='Federal Debt (% of GDP)',
+        name='Publicly Held Debt (% of GDP)',
         line=dict(color=COLORS['DebtGDP'], width=2),
     ))
 
@@ -378,8 +378,8 @@ def build_chart_debt_to_gdp(event_markers=True):
 
     fig.update_layout(
         **LAYOUT_DEFAULTS,
-        title="U.S. Federal Debt-to-GDP Ratio (FRED)",
-        yaxis=dict(title="Federal Debt (% of GDP)", rangemode="tozero"),
+        title="U.S. Publicly Held Federal Debt-to-GDP Ratio (FRED)",
+        yaxis=dict(title="Publicly Held Debt (% of GDP)", rangemode="tozero"),
         xaxis=dict(title=""),
         legend=dict(orientation="h", yanchor="bottom", y=-0.2, x=0.5, xanchor="center",
                     font=dict(size=11), bgcolor='rgba(0,0,0,0)'),

@@ -33,7 +33,7 @@ FRED_SERIES = {
     'FDHBFRBN': 'Federal Debt Held by Federal Reserve Banks',
     'NETFI': 'Balance on Current Account, NIPAs',
     'GDP': 'Gross Domestic Product',
-    'GFDEGDQ188S': 'Federal Debt: Total Public Debt as Percent of GDP',
+
     'FYFSGDA188S': 'Federal Surplus or Deficit as Percent of GDP',
     'DGS10': 'Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity',
 }

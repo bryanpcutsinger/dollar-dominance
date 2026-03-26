@@ -131,11 +131,16 @@ Quarterly, seasonally adjusted at annual rates. A persistent deficit reflects th
 U.S. role as supplier of the world&rsquo;s primary reserve asset &mdash; foreigners
 accumulate dollar claims by running surpluses against the U.S.</p>
 
-<p><strong>Federal Debt-to-GDP Ratio:</strong> Total public debt as a percentage
-of GDP (FRED series GFDEGDQ188S). Quarterly. Rising debt-to-GDP ratios test the
-fiscal capacity that underpins Treasury demand. Hendrickson (2025) argues the system
-becomes fragile when debt levels erode confidence in the government&rsquo;s ability
-to service obligations.</p>
+<p><strong>Publicly Held Debt-to-GDP Ratio:</strong> Federal debt held by the public
+(FRED series FYGFDPUN, millions) divided by GDP (FRED series GDP, billions), expressed
+as a percentage. Quarterly. This measure excludes ~$7 trillion in intragovernmental
+holdings (e.g., the Social Security trust fund), focusing on the debt that markets
+actually price and that the Treasury must finance externally. This is the same
+denominator used in the foreign and Fed Treasury holdings charts. The series begins
+in 1970 (when FYGFDPUN starts), four years later than the old GFDEGDQ188S series.
+Rising debt-to-GDP ratios test the fiscal capacity that underpins Treasury demand.
+Hendrickson (2025) argues the system becomes fragile when debt levels erode confidence
+in the government&rsquo;s ability to service obligations.</p>
 
 <p><strong>Federal Surplus/Deficit (% of GDP):</strong> Annual federal surplus or
 deficit as a percentage of GDP (FRED series FYFSGDA188S). While debt-to-GDP captures

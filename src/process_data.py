@@ -265,30 +265,48 @@ def process_current_account():
 
 
 def process_debt_to_gdp():
-    """Clean and output federal debt-to-GDP ratio.
+    """Compute publicly held federal debt as percent of GDP.
 
-    Uses GFDEGDQ188S (already in percent).
+    Uses FYGFDPUN (millions) / GDP (billions) → percent.
     Output: debt_to_gdp.csv with columns: date, debt_gdp.
     """
-    path = RAW_DIR / 'GFDEGDQ188S.csv'
-    if not path.exists():
-        print("  WARNING: GFDEGDQ188S.csv not found. Skipping debt-to-GDP processing.")
+    fygfdpun_path = RAW_DIR / 'FYGFDPUN.csv'
+    gdp_path = RAW_DIR / 'GDP.csv'
+
+    if not fygfdpun_path.exists() or not gdp_path.exists():
+        print("  WARNING: FYGFDPUN.csv or GDP.csv not found. Skipping debt-to-GDP processing.")
         return None
 
-    df = pd.read_csv(path, parse_dates=['date'], index_col='date')
-    df.columns = ['debt_gdp']
-    df = df.sort_index().dropna(subset=['debt_gdp'])
+    debt = pd.read_csv(fygfdpun_path, parse_dates=['date'], index_col='date')
+    gdp = pd.read_csv(gdp_path, parse_dates=['date'], index_col='date')
 
-    # Sanity check: 20% to 200%
-    out_of_bounds = (df['debt_gdp'] < 20) | (df['debt_gdp'] > 200)
+    debt.columns = ['debt_millions']
+    gdp.columns = ['gdp_billions']
+
+    # Align on quarterly periods
+    debt['period'] = debt.index.to_period('Q')
+    gdp['period'] = gdp.index.to_period('Q')
+
+    merged = debt.merge(gdp, on='period', how='inner')
+    # FYGFDPUN is millions, GDP is billions → convert debt to billions first
+    merged['debt_gdp'] = (merged['debt_millions'] / 1000) / merged['gdp_billions'] * 100
+
+    # Sanity check: 15% to 115%
+    out_of_bounds = (merged['debt_gdp'] < 15) | (merged['debt_gdp'] > 115)
     if out_of_bounds.any():
-        print(f"  WARNING: {out_of_bounds.sum()} debt-to-GDP values outside 20-200% range.")
+        print(f"  WARNING: {out_of_bounds.sum()} debt-to-GDP values outside 15-115% range.")
+
+    result = pd.DataFrame({
+        'date': merged['period'].dt.to_timestamp(how='end'),
+        'debt_gdp': merged['debt_gdp'].values,
+    })
+    result = result.set_index('date').sort_index().dropna(subset=['debt_gdp'])
 
     outpath = PROC_DIR / 'debt_to_gdp.csv'
-    df.to_csv(outpath)
-    print(f"  Debt-to-GDP: {len(df)} quarters, {df.index[0].date()} to {df.index[-1].date()}")
-    print(f"  Latest debt/GDP: {df['debt_gdp'].iloc[-1]:.1f}%")
-    return df
+    result.to_csv(outpath)
+    print(f"  Debt-to-GDP: {len(result)} quarters, {result.index[0].date()} to {result.index[-1].date()}")
+    print(f"  Latest debt/GDP: {result['debt_gdp'].iloc[-1]:.1f}%")
+    return result
 
 
 def process_deficit_gdp():
@@ -425,7 +443,7 @@ def build_metadata(cofer=None, dxy=None, debt=None, fx=None, treasuries=None,
     if debt_to_gdp is not None and len(debt_to_gdp) > 0:
         metadata["sources"]["debt_to_gdp"] = {
             "last_obs": str(debt_to_gdp.index[-1].date()),
-            "source": "FRED GFDEGDQ188S"
+            "source": "FRED FYGFDPUN / GDP"
         }
 
     if deficit_gdp is not None and len(deficit_gdp) > 0:

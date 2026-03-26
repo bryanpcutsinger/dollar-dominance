@@ -29,7 +29,7 @@ open output/index.html
 
 | Source | Method | Frequency |
 |--------|--------|-----------|
-| FRED (DXY, FDHBFIN, GFDEBTN) | `fredapi` | Daily → weekly (DXY), Quarterly (Treasuries) |
+| FRED (DXY, FDHBFIN, FYGFDPUN, GDP, etc.) | `fredapi` | Daily → weekly (DXY), Quarterly (Treasuries, debt-to-GDP) |
 | IMF COFER | SDMX API (DBnomics fallback) | Quarterly |
 | BIS Debt Securities | SDMX REST API | Quarterly |
 | BIS FX Turnover | Hard-coded | Every 3 years |

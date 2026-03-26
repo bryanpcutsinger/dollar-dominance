@@ -159,14 +159,14 @@ class TestDebtToGDP:
     """Test debt-to-GDP processing."""
 
     def test_debt_gdp_in_range(self):
-        """Debt-to-GDP values should be between 20% and 200%."""
+        """Debt-to-GDP values should be between 15% and 115%."""
         path = Path('data/processed/debt_to_gdp.csv')
         if not path.exists():
             pytest.skip("debt_to_gdp.csv not found — run pipeline first")
 
         df = pd.read_csv(path)
-        assert df['debt_gdp'].min() >= 20, f"Debt/GDP below 20%: {df['debt_gdp'].min()}"
-        assert df['debt_gdp'].max() <= 200, f"Debt/GDP above 200%: {df['debt_gdp'].max()}"
+        assert df['debt_gdp'].min() >= 15, f"Debt/GDP below 15%: {df['debt_gdp'].min()}"
+        assert df['debt_gdp'].max() <= 115, f"Debt/GDP above 115%: {df['debt_gdp'].max()}"
 
     def test_debt_gdp_increasing_recent(self):
         """Post-2008 values should be higher than pre-2008 average."""
